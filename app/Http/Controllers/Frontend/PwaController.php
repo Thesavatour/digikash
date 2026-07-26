@@ -58,9 +58,10 @@ class PwaController extends Controller
 
         return response()->file($absolute, [
             'Content-Type'  => 'image/png',
-            // iOS caches /apple-touch-icon.png aggressively; short TTL + ETag
-            // so admin icon updates show up without a week-long wait.
-            'Cache-Control' => 'public, max-age=300, must-revalidate',
+            // iOS may still probe this fixed path. Never let intermediaries
+            // keep a stale copy for days.
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'        => 'no-cache',
             'ETag'          => $etag,
             'Last-Modified' => gmdate('D, d M Y H:i:s', (int) filemtime($absolute)).' GMT',
         ]);
@@ -319,7 +320,8 @@ class PwaController extends Controller
 
     /**
      * Bust caches after admin updates PWA icons / branding colors.
-     * Deletes prepared composites and bumps the SW cache version tag.
+     * Deletes prepared composites, republishes the iOS touch icon under a
+     * content-hashed public path, and bumps the SW cache version tag.
      */
     public function bustIconCaches(?array $keys = null): void
     {
@@ -330,6 +332,61 @@ class PwaController extends Controller
         }
 
         Setting::add('pwa_cache_version', 'v'.now()->format('YmdHis'), 'string');
+        $this->publishAppleTouchIcon();
+    }
+
+    /**
+     * iOS ignores query-string cache busting on apple-touch-icon links and
+     * freezes the home-screen glyph at install time. Publishing to a unique
+     * content-hashed path forces Safari to fetch the new file when the user
+     * re-adds the app.
+     */
+    public function appleTouchIconPublicUrl(): string
+    {
+        $published = trim((string) setting('pwa_apple_touch_published'));
+        if ($published !== '' && is_file(public_path($published))) {
+            return '/'.ltrim($published, '/');
+        }
+
+        return $this->publishAppleTouchIcon();
+    }
+
+    public function publishAppleTouchIcon(): string
+    {
+        $sourcePath = $this->iconPath('apple_touch_icon');
+        $absolute   = $this->absoluteIconPath($sourcePath);
+
+        if ($absolute === null || ! is_file($absolute)) {
+            $fallback = public_path('pwa/icons/apple-touch-icon.png');
+            if (! is_file($fallback)) {
+                return '/apple-touch-icon.png';
+            }
+            $absolute = $fallback;
+        }
+
+        $hash     = substr((string) sha1_file($absolute), 0, 16);
+        $relative = 'pwa/touch/apple-'.$hash.'.png';
+        $destDir  = public_path('pwa/touch');
+        $dest     = public_path($relative);
+
+        if (! is_dir($destDir)) {
+            @mkdir($destDir, 0755, true);
+        }
+
+        if (! is_file($dest) || (string) sha1_file($dest) !== (string) sha1_file($absolute)) {
+            @copy($absolute, $dest);
+        }
+
+        // Drop older published touch icons so public/ does not accumulate them.
+        foreach (glob($destDir.'/apple-*.png') ?: [] as $old) {
+            if (realpath($old) !== realpath($dest)) {
+                @unlink($old);
+            }
+        }
+
+        Setting::add('pwa_apple_touch_published', $relative, 'string');
+
+        return '/'.$relative;
     }
 
     private function clearPreparedIcons(string $key): void

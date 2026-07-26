@@ -1,6 +1,9 @@
 @php
     $pwa = app(\App\Http\Controllers\Frontend\PwaController::class);
-    $appleTouchVersion = preg_replace('/[^A-Za-z0-9]/', '', (string) setting('pwa_cache_version', '')).'-'.substr(sha1($pwa->iconUrl('apple_touch_icon')), 0, 10);
+    // Content-hashed path (not ?v=). iOS Safari ignores query strings on
+    // apple-touch-icon and keeps the home-screen glyph until the user
+    // deletes + re-adds the app with a new href path.
+    $appleTouchHref = $pwa->appleTouchIconPublicUrl();
 @endphp
 @if($pwa->isPwaEnabled())
     <meta name="theme-color" content="{{ $pwa->themeColor() }}">
@@ -11,10 +14,9 @@
     <meta name="apple-mobile-web-app-title" content="{{ $pwa->shortName() }}">
     <meta name="application-name" content="{{ $pwa->appName() }}">
     <link rel="manifest" href="{{ route('pwa.manifest') }}?v={{ urlencode($pwa->cacheVersionPublic()) }}">
-    {{-- Version query helps browsers that honor it; root path still served for iOS. --}}
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png?v={{ $appleTouchVersion }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ $pwa->iconUrl('apple_touch_icon') }}">
-    <link rel="apple-touch-icon-precomposed" href="/apple-touch-icon-precomposed.png?v={{ $appleTouchVersion }}">
+    <link rel="apple-touch-icon" href="{{ $appleTouchHref }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ $appleTouchHref }}">
+    <link rel="apple-touch-icon-precomposed" href="{{ $appleTouchHref }}">
     {{-- 192/512 PWA icons are intentionally NOT declared as <link rel="icon">.
          Chrome/Android pull those from the manifest's icons array for install
          and the home screen — duplicating them here as <link rel="icon"> just
