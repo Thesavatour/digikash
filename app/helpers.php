@@ -244,11 +244,58 @@ if (! function_exists('setting_select_options')) {
             'site_decimal'              => [0, 1, 2, 3, 4, 5, 6, 7, 8],
             'pwa_display'               => ['standalone', 'fullscreen', 'minimal-ui', 'browser'],
             'pwa_orientation'           => ['portrait-primary', 'landscape-primary', 'portrait', 'landscape', 'any'],
+            'kyc_live_driver'           => [
+                __('Disabled (file upload only)') => 'none',
+                __('Builtin camera')              => 'builtin',
+                __('Didit')                       => 'didit',
+            ],
             'notification_tune_default' => collect(NotificationTuneLibrary::tunes())
                 ->mapWithKeys(fn (array $tune, string $key): array => [$tune['label'] => $key])
                 ->all(),
             default => [],
         };
+    }
+}
+
+/**
+ * Active KYC live verification driver: none | builtin | didit.
+ * Admin setting wins; falls back to config/env.
+ */
+if (! function_exists('kyc_live_driver')) {
+    function kyc_live_driver(): string
+    {
+        try {
+            $driver = (string) setting('kyc_live_driver', config('kyc.live_driver', 'none'));
+        } catch (Throwable) {
+            $driver = (string) config('kyc.live_driver', 'none');
+        }
+
+        return in_array($driver, ['none', 'builtin', 'didit'], true) ? $driver : 'none';
+    }
+}
+
+/**
+ * True when a pending KYC row was created for Didit but Didit has not
+ * returned a final decision yet (not an admin "under review" state).
+ */
+if (! function_exists('kyc_submission_awaiting_didit')) {
+    function kyc_submission_awaiting_didit(?\App\Models\KycSubmission $submission): bool
+    {
+        if (! $submission || $submission->status !== \App\Enums\KycStatus::PENDING) {
+            return false;
+        }
+
+        $live = is_array($submission->submission_data['live_verification'] ?? null)
+            ? $submission->submission_data['live_verification']
+            : [];
+
+        if (($live['driver'] ?? null) !== 'didit') {
+            return false;
+        }
+
+        $diditStatus = strtolower((string) ($live['didit_status'] ?? ''));
+
+        return ! in_array($diditStatus, ['approved', 'declined', 'rejected', 'abandoned'], true);
     }
 }
 
@@ -602,6 +649,64 @@ if (! function_exists('safeUrl')) {
         // Hand back the cleaned version, not the original — so the browser
         // can never see the smuggled control characters either.
         return $stripped;
+    }
+}
+
+if (! function_exists('notificationActionUrl')) {
+    /**
+     * Normalise a stored notification action_link for the current site.
+     *
+     * Older notifications may contain absolute URLs from local tunnels
+     * (trycloudflare, LAN IP, localhost) that 404 in production. Rewrite
+     * those to the current app origin, and map bare /user/deposit|/user/withdraw
+     * stubs to the transaction history.
+     */
+    function notificationActionUrl(?string $url, ?string $fallback = null): string
+    {
+        $fallback = $fallback ?: route('user.notifications.index');
+        $safe     = safeUrl($url, $fallback);
+
+        if ($safe === $fallback || $safe === '#' || $safe === 'javascript:void(0)') {
+            return $fallback;
+        }
+
+        $path = $safe;
+        $query = '';
+
+        if (preg_match('#^https?://#i', $safe)) {
+            $parts = parse_url($safe);
+            if ($parts === false || empty($parts['host'])) {
+                return $fallback;
+            }
+
+            $appHost     = strtolower((string) parse_url((string) config('app.url'), PHP_URL_HOST));
+            $requestHost = strtolower((string) request()->getHost());
+            $linkHost    = strtolower((string) $parts['host']);
+            $allowed     = array_values(array_filter([$appHost, $requestHost]));
+
+            $path  = $parts['path'] ?? '/';
+            $query = isset($parts['query']) ? '?'.$parts['query'] : '';
+
+            // Same host — keep as-is (absolute or relative both fine).
+            if (in_array($linkHost, $allowed, true)) {
+                return $path.$query;
+            }
+        } elseif (str_starts_with($safe, '/')) {
+            $parts = parse_url($safe);
+            $path  = $parts['path'] ?? $safe;
+            $query = isset($parts['query']) ? '?'.$parts['query'] : '';
+        } else {
+            return $fallback;
+        }
+
+        $normalizedPath = rtrim($path, '/') ?: '/';
+
+        // Legacy stubs that never matched real routes.
+        if (in_array($normalizedPath, ['/user/withdraw', '/user/deposit'], true)) {
+            return route('user.transaction.index');
+        }
+
+        return $path.$query;
     }
 }
 

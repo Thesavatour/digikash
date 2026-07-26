@@ -58,6 +58,7 @@ use App\Http\Controllers\Frontend\WalletPinController;
 use App\Http\Controllers\Frontend\WithdrawAccountController;
 use App\Http\Controllers\Frontend\WithdrawController;
 use App\Http\Controllers\Webhook\BitnobWebhookController;
+use App\Http\Controllers\Webhook\DiditWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -141,6 +142,9 @@ Route::prefix('user')->as('user.')->middleware(['auth', 'auth.session', 'account
             Route::get('template/details/{id}', 'templateDetails')->name('template.details');
 
             Route::post('submit', 'kycSubmit')->name('submit');
+            Route::post('didit/start', 'diditStart')->name('didit.start');
+            Route::post('didit/resume', 'diditResume')->name('didit.resume');
+            Route::post('didit/cancel', 'diditCancel')->name('didit.cancel');
         });
     });
 
@@ -445,6 +449,9 @@ Route::match(['get', 'post'], '/ipn/{gateway}', [IPNController::class, 'handleIP
 Route::post('/webhooks/bitnob', BitnobWebhookController::class)
     ->middleware('bitnob.signature')
     ->name('webhooks.bitnob');
+
+Route::post('/webhooks/didit', DiditWebhookController::class)
+    ->name('webhooks.didit');
 
 // Payment Status Routes
 Route::prefix('status')->as('status.')->controller(StatusController::class)->group(function () {

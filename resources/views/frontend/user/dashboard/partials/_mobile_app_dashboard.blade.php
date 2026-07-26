@@ -64,7 +64,13 @@
     $kycSub   = __('Submit your details and documents to unlock wallet features.');
     $kycCta   = __('Start verification');
     $kycIcon  = 'fa-id-card';
-    if ($kycStatus === KycStatus::PENDING) {
+    if (kyc_submission_awaiting_didit($kyc)) {
+        $kycState = 'awaiting_didit';
+        $kycTitle = __('Finish identity verification');
+        $kycSub   = __('You started verification but have not finished yet. Resume or cancel on the KYC page.');
+        $kycCta   = __('Continue');
+        $kycIcon  = 'fa-external-link-alt';
+    } elseif ($kycStatus === KycStatus::PENDING) {
         $kycState = 'pending';
         $kycTitle = __('Identity review in progress');
         $kycSub   = __('Reviews usually finish within 24 hours.');

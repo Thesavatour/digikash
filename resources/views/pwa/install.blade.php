@@ -6,13 +6,8 @@
     <meta name="theme-color" content="{{ $themeColor }}">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="{{ $shortName ?? $siteTitle }}">
     <meta name="robots" content="noindex,nofollow">
     <link rel="manifest" href="{{ route('pwa.manifest') }}">
-    <link rel="apple-touch-icon" href="{{ $appleTouchIconUrl ?? '/apple-touch-icon.png' }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ $appleTouchIconUrl ?? '/apple-touch-icon.png' }}">
-    <link rel="apple-touch-icon-precomposed" href="{{ $appleTouchIconUrl ?? '/apple-touch-icon.png' }}">
     <title>{{ __('Install App') }} | {{ $siteTitle }}</title>
     <style>
         :root {

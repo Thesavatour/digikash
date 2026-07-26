@@ -12,6 +12,10 @@ use App\Observers\UserObserver;
 use App\Services\AppConfigService;
 use App\Services\CurrencyService;
 use App\Services\IpInfoService;
+use App\Services\Kyc\Contracts\KycLiveVerifier;
+use App\Services\Kyc\Drivers\BuiltinCameraVerifier;
+use App\Services\Kyc\Drivers\DiditKycLiveVerifier;
+use App\Services\Kyc\Drivers\NullKycLiveVerifier;
 use App\Services\Payment\PaymentGatewayFactory;
 use App\Services\Payment\Payout\PayoutGatewayFactory;
 use App\Services\PaymentService;
@@ -57,6 +61,16 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentService::class, fn ($app) => new PaymentService($app->make(PaymentGatewayFactory::class)));
 
         $this->app->singleton(PayoutGatewayFactory::class, fn ($app) => new PayoutGatewayFactory);
+
+        // Bind (not singleton) so admin toggles of kyc_live_driver take effect
+        // on the next request without requiring a process restart.
+        $this->app->bind(KycLiveVerifier::class, function () {
+            return match (kyc_live_driver()) {
+                'builtin' => new BuiltinCameraVerifier,
+                'didit'   => new DiditKycLiveVerifier,
+                default   => new NullKycLiveVerifier,
+            };
+        });
     }
 
     /**

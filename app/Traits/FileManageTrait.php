@@ -28,7 +28,8 @@ trait FileManageTrait
     {
         $allowedExtensions = [
             'zip', 'rar', 'pdf', 'doc', 'docx', 'txt', 'csv', 'xml', 'json',
-            'ppt', 'pptx', 'ods', 'odt', 'xls', 'xlsx', 'png', 'jpg', 'gif', 'svg', 'webp',
+            'ppt', 'pptx', 'ods', 'odt', 'xls', 'xlsx', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp',
+            'mp4', 'webm', 'mov',
         ];
 
         return $this->handleUpload($file, $old, 'files', $allowedExtensions, false, null, null, $isTemp);

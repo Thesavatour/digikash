@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="{{ $themeColor }}">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <title>{{ __('Offline') }} | {{ $siteTitle }}</title>
     <style>
         :root {

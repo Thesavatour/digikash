@@ -30,6 +30,35 @@ class PwaController extends Controller
         'apple_touch_icon' => [180, 180],
     ];
 
+    /**
+     * iOS Safari requests /apple-touch-icon.png at the site root when adding
+     * to the Home Screen. Serving it here (short path, no query string)
+     * avoids the letter-glyph fallback when the configured icon URL is long
+     * or stored under /images/...
+     */
+    public function appleTouchIcon(): BinaryFileResponse|Response
+    {
+        if (! $this->isPwaEnabled()) {
+            return response('Not Found', 404);
+        }
+
+        $path = $this->iconPath('apple_touch_icon');
+        $absolute = $this->absoluteIconPath($path);
+
+        if ($absolute === null || ! is_file($absolute)) {
+            $fallback = public_path('pwa/icons/apple-touch-icon.png');
+            if (! is_file($fallback)) {
+                return response('Not Found', 404);
+            }
+            $absolute = $fallback;
+        }
+
+        return response()->file($absolute, [
+            'Content-Type'  => 'image/png',
+            'Cache-Control' => 'public, max-age=604800',
+        ]);
+    }
+
     public function manifest(): JsonResponse|Response
     {
         if (! $this->isPwaEnabled()) {
@@ -128,14 +157,12 @@ class PwaController extends Controller
         return response()
             ->view('pwa.launcher', [
                 'siteTitle'         => $this->appName(),
-                'shortName'         => $this->shortName(),
                 'themeColor'        => $this->themeColor(),
                 'backgroundColor'   => $this->backgroundColor(),
                 'foregroundColor'   => $this->onBackgroundTextColor(),
                 'mutedColor'        => $this->onBackgroundMutedColor(),
                 'spinnerTrackColor' => $this->onBackgroundSpinnerTrackColor(),
                 'iconUrl'           => $this->iconUrl('icon_192'),
-                'appleTouchIconUrl' => $this->appleTouchIconUrl(),
                 'targetUrl'         => route('user.dashboard', [], false),
                 'isLightBackground' => $this->isLightBackground(),
             ], 200, [
@@ -158,13 +185,11 @@ class PwaController extends Controller
 
         return response()
             ->view('pwa.install', [
-                'siteTitle'         => $this->appName(),
-                'shortName'         => $this->shortName(),
-                'themeColor'        => $this->themeColor(),
-                'backgroundColor'   => $this->backgroundColor(),
-                'iconUrl'           => $this->iconUrl('icon_192'),
-                'appleTouchIconUrl' => $this->appleTouchIconUrl(),
-                'returnUrl'         => $this->safeReturnUrl((string) $request->query('return', route('user.dashboard', [], false))),
+                'siteTitle'       => $this->appName(),
+                'themeColor'      => $this->themeColor(),
+                'backgroundColor' => $this->backgroundColor(),
+                'iconUrl'         => $this->iconUrl('icon_192'),
+                'returnUrl'       => $this->safeReturnUrl((string) $request->query('return', route('user.dashboard', [], false))),
             ], 200, [
                 'Cache-Control'          => 'public, max-age=300',
                 'Content-Type'           => 'text/html; charset=UTF-8',
@@ -191,7 +216,13 @@ class PwaController extends Controller
     {
         $custom = trim((string) setting('pwa_short_name'));
 
-        return $custom !== '' ? Str::limit($custom, 12, '') : Str::limit($this->appName(), 12, '');
+        // Home-screen labels need a readable word. 1–2 character shorts like
+        // "PP" cause iOS/Android to look "wrong" vs the App Name saved in admin.
+        if ($custom !== '' && mb_strlen($custom) >= 3) {
+            return Str::limit($custom, 12, '');
+        }
+
+        return Str::limit($this->appName(), 12, '');
     }
 
     public function themeColor(): string
@@ -260,7 +291,7 @@ class PwaController extends Controller
         return in_array($value, $allowed, true) ? $value : 'portrait-primary';
     }
 
-    public function iconUrl(string $key, bool $versioned = true): string
+    public function iconUrl(string $key): string
     {
         $path = $this->iconPath($key);
 
@@ -273,52 +304,9 @@ class PwaController extends Controller
         // install when APP_URL doesn't match the request host — Chrome/iOS
         // then fall back to a letter glyph from the app name.
         $relative = '/'.ltrim($path, '/');
-
-        // iOS Safari historically drops apple-touch-icon fetches that include
-        // cache-busting query strings, so Apple icons stay unversioned.
-        if (! $versioned || $key === 'apple_touch_icon') {
-            return $relative;
-        }
-
         $version = $this->iconVersion($path);
 
         return $version !== null ? $relative.'?v='.$version : $relative;
-    }
-
-    /**
-     * Stable root path iOS auto-discovers when adding to Home Screen.
-     */
-    public function appleTouchIconUrl(): string
-    {
-        return '/apple-touch-icon.png';
-    }
-
-    /**
-     * Serve the prepared 180×180 Apple touch icon at the conventional root
-     * paths Safari probes (/apple-touch-icon.png and -precomposed).
-     */
-    public function appleTouchIcon(): BinaryFileResponse|Response
-    {
-        if (! $this->isPwaEnabled()) {
-            return response('Not Found', 404);
-        }
-
-        $path = $this->iconPath('apple_touch_icon');
-        $absolute = $this->absoluteIconPath($path);
-
-        if ($absolute === null || ! is_file($absolute)) {
-            $absolute = public_path(self::FALLBACK_ICONS['apple_touch_icon']);
-        }
-
-        if (! is_file($absolute)) {
-            return response('Not Found', 404);
-        }
-
-        return response()->file($absolute, [
-            'Content-Type'           => 'image/png',
-            'Cache-Control'          => 'public, max-age=86400',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
     }
 
     private function iconPath(string $key): string

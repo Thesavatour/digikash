@@ -88,7 +88,7 @@
                     $isUnread = $notification->read_at === null;
                 @endphp
 
-                <a href="{{  $data['action_link'] ?? 'javascript:void(0)'  }}" data-id="{{ $notification->id }}"
+                <a href="{{ route('user.notifications.markAsRead', $notification->id) }}" data-id="{{ $notification->id }}"
                    class="notification-item notification-dropdown__item user-notification-card user-notification-card--{{ $statusClass }} {{ $isUnread ? 'is-unread' : 'is-read' }} read-notification"
                    data-tone="{{ $statusClass }}"
                    role="menuitem">
@@ -137,32 +137,9 @@
 @push('scripts')
     <script>
         'use strict';
-        // Attach click event to mark notification as read
-        $(document).on('click', '.read-notification', function () {
-            'use strict';
-
-            const notificationId = $(this).data('id');
-            const url = "{{ route('user.notifications.markAsRead', ':id') }}".replace(':id', notificationId);
-
-            // Make AJAX request to mark notification as read
-            $.ajax({
-                url: url,
-                type: 'GET',
-                data: {
-                    _token: '{{ csrf_token() }}' // Ensure CSRF token is included
-                },
-                success: function (response) {
-                    const notificationUrl = '{{ route('user.notifications.recent') }}';
-                    $.get(notificationUrl, function (response) {
-                        $('.append-new-notification').html(response); // Update notifications
-                    });
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error('Error marking notification as read:', textStatus, errorThrown);
-                    // Optionally display an error message to the user
-                }
-            });
-        });
+        // Clicks navigate to markAsRead, which redirects to the action URL.
+        // No AJAX intercept — that previously raced with href navigation and
+        // left users on dead tunnel / 404 destinations from stored links.
 
     </script>
 @endpush

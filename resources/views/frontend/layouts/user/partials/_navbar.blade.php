@@ -16,8 +16,11 @@
 			$brandTail = mb_substr($siteTitle, max(1, mb_strlen($siteTitle) - 4));
 		@endphp
 		<a href="{{ route('home') }}" class="ph-brand" aria-label="{{ $siteTitle }}">
-                <span class="ph-brand__mark" aria-hidden="true">
-                   <img src="{{ asset(setting('small_logo')) }}" alt="{{$siteTitle}}" loading="lazy">
+                @php
+                    $pwaBrandIcon = app(\App\Http\Controllers\Frontend\PwaController::class)->iconUrl('icon_192');
+                @endphp
+                <span class="ph-brand__mark ph-brand__mark--app" aria-hidden="true">
+                   <img src="{{ $pwaBrandIcon }}" alt="{{ $siteTitle }}" loading="lazy">
                  </span>
 			<span class="ph-brand__text">
                 <span class="ph-brand__name">{{ $brandLead }}<span>{{ $brandTail }}</span></span>

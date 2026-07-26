@@ -2,6 +2,10 @@
     KYC template field group partial.
     Rendered inside the parent verification form; must NOT contain a nested <form>.
 --}}
+@php
+    $kycLive = app(\App\Services\Kyc\Contracts\KycLiveVerifier::class);
+    $liveEnabled = $kycLive->isEnabled();
+@endphp
 <div class="kyc-template-fields">
     <header class="kyc-template-fields__header">
         <h6 class="kyc-template-fields__title">{{ $template->title }}</h6>
@@ -16,7 +20,9 @@
                 $fieldLabel    = ucfirst(str_replace('_', ' ', $field['label']));
                 $fieldKey      = $field['label'];
                 $fieldType     = $field['type'] ?? 'text';
-                $isRequired    = ! empty($field['validation']);
+                // Templates store required as boolean|string "true"; older seeds used "validation".
+                $isRequired    = (isset($field['required']) && ($field['required'] === true || $field['required'] === 'true'))
+                    || ! empty($field['validation']);
                 $fieldId       = 'kyc-credential-' . \Illuminate\Support\Str::slug($fieldKey);
                 $fieldName     = "credentials[{$fieldKey}]";
             @endphp
@@ -34,7 +40,13 @@
                            id="{{ $fieldId }}"
                            name="{{ $fieldName }}"
                            class="form-control"
+                           accept="image/*,.pdf"
                            @if($isRequired) required @endif>
+                    @if($liveEnabled)
+                        <p class="kyc-verify-field__hint mt-1 mb-0">
+                            {{ __('Or use the Live verification camera below to capture this document.') }}
+                        </p>
+                    @endif
                 @elseif($fieldType === 'textarea')
                     <textarea id="{{ $fieldId }}"
                               name="{{ $fieldName }}"

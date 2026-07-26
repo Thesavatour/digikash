@@ -1,5 +1,5 @@
 @php
-	$siteName  = setting('site_title', 'DigiKash');
+	$siteName  = setting('site_title', 'PayPoint');
 	$backLabel = $backLabel ?? __('Back to Home');
 	$backUrl   = $backUrl   ?? route('home');
 @endphp

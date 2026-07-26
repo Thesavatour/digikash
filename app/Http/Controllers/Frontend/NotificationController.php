@@ -57,7 +57,13 @@ class NotificationController extends Controller
 
         $action = $notification->data['action_link'] ?? null;
         if (filled($action) && $action !== 'javascript:void(0)') {
-            return redirect()->to(safeUrl($action, route('user.notifications.index')));
+            return redirect()->to(notificationActionUrl($action));
+        }
+
+        // Prefer opening the related receipt when a trx id is on the payload.
+        $trx = $notification->data['trx'] ?? null;
+        if (filled($trx)) {
+            return redirect()->to(user_transaction_receipt_url((string) $trx));
         }
 
         return redirect()->route('user.notifications.index');

@@ -1,5 +1,5 @@
 @php
-	$gdkSiteName = setting('site_title', 'DigiKash');
+	$gdkSiteName = setting('site_title', 'PayPoint');
 @endphp
 
 <header class="gdk-header">

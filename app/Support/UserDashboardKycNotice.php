@@ -15,7 +15,7 @@ class UserDashboardKycNotice
     public function forUser(User $user): array
     {
         $kycSubmission = $user->kycSubmission;
-        $state         = $this->resolveState($kycSubmission?->status);
+        $state         = $this->resolveState($kycSubmission);
         $isApproved    = $state === 'approved';
 
         return [
@@ -28,9 +28,13 @@ class UserDashboardKycNotice
         ];
     }
 
-    private function resolveState(?KycStatus $status): string
+    private function resolveState($kycSubmission): string
     {
-        return match ($status) {
+        if (kyc_submission_awaiting_didit($kycSubmission)) {
+            return 'awaiting_didit';
+        }
+
+        return match ($kycSubmission?->status) {
             KycStatus::APPROVED => 'approved',
             KycStatus::PENDING  => 'pending',
             KycStatus::REJECTED => 'rejected',
@@ -50,6 +54,14 @@ class UserDashboardKycNotice
                 'icon'     => 'fa-check',
                 'step'     => __('Verified'),
                 'cta'      => __('View status'),
+                'cta_icon' => 'fa-arrow-right',
+            ],
+            'awaiting_didit' => [
+                'title'    => __('Finish identity verification'),
+                'message'  => __('You started verification but have not finished yet. Resume or cancel on the KYC page.'),
+                'icon'     => 'fa-external-link-alt',
+                'step'     => __('In progress'),
+                'cta'      => __('Continue'),
                 'cta_icon' => 'fa-arrow-right',
             ],
             'pending' => [

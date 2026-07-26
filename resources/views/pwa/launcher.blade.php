@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="{{ $themeColor }}">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="{{ $shortName ?? $siteTitle }}">
     <meta name="robots" content="noindex,nofollow">
-    <link rel="apple-touch-icon" href="{{ $appleTouchIconUrl ?? '/apple-touch-icon.png' }}">
-    <link rel="apple-touch-icon" sizes="180x180" href="{{ $appleTouchIconUrl ?? '/apple-touch-icon.png' }}">
     <title>{{ $siteTitle }}</title>
     <style>
         :root { color-scheme: {{ $isLightBackground ? 'light' : 'dark' }}; }

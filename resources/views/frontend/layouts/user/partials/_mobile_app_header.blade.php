@@ -359,7 +359,7 @@
                     default => 'violet',
                 };
             @endphp
-            <a href="{{ $data['action_link'] ?? 'javascript:void(0)' }}"
+            <a href="{{ route('user.notifications.markAsRead', $notification->id) }}"
                class="dk-notif-item {{ $isUnread ? 'is-unread' : '' }} read-notification"
                data-tone="{{ $notificationTone }}"
                data-id="{{ $notification->id }}">

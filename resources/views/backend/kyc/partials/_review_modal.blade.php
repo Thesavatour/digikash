@@ -29,6 +29,13 @@
     $kycType = $submission->kycTemplate?->title ?? __('Unknown template');
     $reviewMode = empty($action) || $action !== 'view';
     $hasRemarks = filled($submission->notes ?? null);
+    $submissionData = is_array($submission->submission_data) ? $submission->submission_data : [];
+    $liveMeta = is_array($submissionData['live_verification'] ?? null) ? $submissionData['live_verification'] : null;
+    $liveSelfie = is_string($submissionData['live_selfie'] ?? null) ? $submissionData['live_selfie'] : null;
+    $liveDocument = is_string($submissionData['live_document'] ?? null) ? $submissionData['live_document'] : null;
+    $liveDriver = is_string($liveMeta['driver'] ?? null) ? $liveMeta['driver'] : null;
+    $hasLiveEvidence = filled($liveSelfie) || filled($liveDocument) || filled($liveDriver);
+    $liveSelfieIsVideo = is_string($liveSelfie) && preg_match('/\.(webm|mp4|mov)$/i', $liveSelfie);
 @endphp
 
 <div class="modal fade kyc-modal" id="review-{{ $submission->id }}" tabindex="-1" aria-labelledby="KycReviewLabel-{{ $submission->id }}" aria-hidden="true">
@@ -146,7 +153,88 @@
                                 <span class="kyc-modal__meta-value">{{ $submission->created_at->diffForHumans() }}</span>
                             </div>
                         </div>
+
+                        @if($hasLiveEvidence)
+                            <div class="kyc-modal__meta-item">
+                                <span class="kyc-modal__meta-icon" aria-hidden="true">
+                                    <i class="fa-solid fa-video"></i>
+                                </span>
+                                <div class="kyc-modal__meta-body">
+                                    <span class="kyc-modal__meta-label">{{ __('Live Driver') }}</span>
+                                    <span class="kyc-modal__meta-value">
+                                        <span class="badge text-bg-primary text-uppercase">{{ $liveDriver ?: __('n/a') }}</span>
+                                    </span>
+                                </div>
+                            </div>
+                        @endif
                     </div>
+
+                    {{-- Live camera evidence --}}
+                    @if($hasLiveEvidence)
+                        <section class="kyc-modal__section" aria-labelledby="kyc-live-{{ $submission->id }}">
+                            <header class="kyc-modal__section-head">
+                                <span class="kyc-modal__section-icon" aria-hidden="true">
+                                    <i class="fa-solid fa-camera"></i>
+                                </span>
+                                <h3 class="kyc-modal__section-title" id="kyc-live-{{ $submission->id }}">
+                                    {{ __('Live verification captures') }}
+                                    @if($liveDriver)
+                                        <span class="kyc-modal__section-hint">{{ __('Driver') }}: {{ $liveDriver }}</span>
+                                    @endif
+                                </h3>
+                            </header>
+
+                            @if(! empty($liveMeta['captured_at']))
+                                <p class="small text-body-secondary mb-3">
+                                    {{ __('Captured') }}:
+                                    {{ \Illuminate\Support\Carbon::parse($liveMeta['captured_at'])->timezone(config('app.timezone'))->format('Y-m-d H:i') }}
+                                </p>
+                            @endif
+
+                            <div class="kyc-modal__fields">
+                                @if($liveSelfie)
+                                    <div class="kyc-modal__field">
+                                        <span class="kyc-modal__field-label">{{ __('Live video') }}</span>
+                                        @if($liveSelfieIsVideo)
+                                            <div class="kyc-modal__field-video">
+                                                <video src="{{ asset($liveSelfie) }}"
+                                                       controls
+                                                       playsinline
+                                                       preload="metadata"
+                                                       style="width:100%;max-height:320px;border-radius:12px;background:#0b1220;">
+                                                    {{ __('Your browser does not support video playback.') }}
+                                                </video>
+                                                <a href="{{ asset($liveSelfie) }}" target="_blank" rel="noopener" class="small d-inline-block mt-2">
+                                                    {{ __('Open / download video') }}
+                                                </a>
+                                            </div>
+                                        @else
+                                            <a href="{{ asset($liveSelfie) }}" target="_blank" rel="noopener" class="kyc-modal__field-image">
+                                                <img src="{{ asset($liveSelfie) }}" alt="{{ __('Live video') }}" loading="lazy">
+                                                <span class="kyc-modal__field-image-overlay" aria-hidden="true">
+                                                    <i class="fa-solid fa-up-right-from-square"></i>
+                                                    {{ __('Open full size') }}
+                                                </span>
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
+
+                                @if($liveDocument)
+                                    <div class="kyc-modal__field">
+                                        <span class="kyc-modal__field-label">{{ __('Live document') }}</span>
+                                        <a href="{{ asset($liveDocument) }}" target="_blank" rel="noopener" class="kyc-modal__field-image">
+                                            <img src="{{ asset($liveDocument) }}" alt="{{ __('Live document') }}" loading="lazy">
+                                            <span class="kyc-modal__field-image-overlay" aria-hidden="true">
+                                                <i class="fa-solid fa-up-right-from-square"></i>
+                                                {{ __('Open full size') }}
+                                            </span>
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </section>
+                    @endif
 
                     {{-- Submitted note from user --}}
                     @if($hasRemarks)
@@ -175,15 +263,23 @@
                         </header>
 
                         <div class="kyc-modal__fields">
-                            @foreach($submission->submission_data as $fieldName => $value)
+                            @foreach($submissionData as $fieldName => $value)
+                                @continue(in_array($fieldName, ['live_selfie', 'live_document', 'live_verification'], true))
                                 @php
                                     $isFile = is_string($value) && \Illuminate\Support\Str::startsWith($value, 'files/');
                                     $isImage = $isFile && preg_match('/\.(jpg|jpeg|png|gif|webp)$/i', $value);
+                                    $isVideo = $isFile && preg_match('/\.(webm|mp4|mov)$/i', $value);
                                 @endphp
                                 <div class="kyc-modal__field">
                                     <span class="kyc-modal__field-label">{{ ucwords(str_replace(['_', '-'], ' ', $fieldName)) }}</span>
 
-                                    @if($isImage)
+                                    @if($isVideo)
+                                        <video src="{{ asset($value) }}"
+                                               controls
+                                               playsinline
+                                               preload="metadata"
+                                               style="width:100%;max-height:280px;border-radius:12px;background:#0b1220;"></video>
+                                    @elseif($isImage)
                                         <a href="{{ asset($value) }}" target="_blank" rel="noopener" class="kyc-modal__field-image">
                                             <img src="{{ asset($value) }}" alt="{{ $fieldName }}" loading="lazy">
                                             <span class="kyc-modal__field-image-overlay" aria-hidden="true">
@@ -202,6 +298,8 @@
                                             </span>
                                             <i class="fa-solid fa-download kyc-modal__field-file-action" aria-hidden="true"></i>
                                         </a>
+                                    @elseif(is_array($value))
+                                        <span class="kyc-modal__field-value"><code>{{ json_encode($value) }}</code></span>
                                     @else
                                         <span class="kyc-modal__field-value">{{ $value !== null && $value !== '' ? $value : __('—') }}</span>
                                     @endif

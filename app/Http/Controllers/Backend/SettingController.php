@@ -42,6 +42,7 @@ class SettingController extends BaseController
             'notification_settings',
             'signup_bonus_settings',
             'agent_settings',
+            'kyc_settings',
             'pwa_settings',
             'cookie_settings',
             'maintenance_mode',
