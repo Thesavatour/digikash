@@ -3,6 +3,11 @@
 
     RewriteEngine On
 
+    # Always route apple-touch icons through Laravel so Cache-Control: no-store
+    # is applied. A static public/apple-touch-icon.png would be long-cached by
+    # Cloudflare and freeze the iOS Home Screen glyph after icon updates.
+    RewriteRule ^apple-touch-icon(-precomposed)?\.png$ index.php [L,NC]
+
     # Serve /images/... from /storage/images/...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
@@ -35,5 +40,15 @@
     <FilesMatch "\.(env|json|lock|git|md|ini|log|yml|yaml|xml|dist|example)$">
         Order allow,deny
         Deny from all
+    </FilesMatch>
+</IfModule>
+
+# Hint CDNs not to store apple-touch responses (Hostinger/Cloudflare).
+<IfModule mod_headers.c>
+    <FilesMatch "^(apple-touch-icon(-precomposed)?\.png)$">
+        Header set Cache-Control "private, no-store, no-cache, must-revalidate, max-age=0"
+        Header set CDN-Cache-Control "no-store"
+        Header set Cloudflare-CDN-Cache-Control "no-store"
+        Header set Pragma "no-cache"
     </FilesMatch>
 </IfModule>
