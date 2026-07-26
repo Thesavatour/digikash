@@ -296,12 +296,6 @@
                                     {{ __('Secure') }}
                                 </span>
                             </div>
-                            <div class="kyc-live__actions mt-3">
-                                <button type="submit" class="btn btn-primary btn-lg w-100" data-didit-start>
-                                    <i class="fas fa-external-link-alt me-2" aria-hidden="true"></i>
-                                    {{ __('Start live verification') }}
-                                </button>
-                            </div>
                         </div>
                     </div>
                 @endif
