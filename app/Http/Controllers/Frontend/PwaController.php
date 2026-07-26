@@ -57,13 +57,19 @@ class PwaController extends Controller
         $etag = '"'.sha1_file($absolute).'"';
 
         return response()->file($absolute, [
-            'Content-Type'  => 'image/png',
-            // iOS may still probe this fixed path. Never let intermediaries
-            // keep a stale copy for days.
-            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
-            'Pragma'        => 'no-cache',
-            'ETag'          => $etag,
-            'Last-Modified' => gmdate('D, d M Y H:i:s', (int) filemtime($absolute)).' GMT',
+            'Content-Type'                   => 'image/png',
+            // iOS probes this fixed root path even when HTML uses a hashed
+            // /pwa/touch/... URL. Cloudflare was caching an older PNG for 7
+            // days — force every CDN hop to skip storing this response.
+            'Cache-Control'                  => 'private, no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma'                         => 'no-cache',
+            'Expires'                        => '0',
+            'CDN-Cache-Control'              => 'no-store',
+            'Cloudflare-CDN-Cache-Control'   => 'no-store',
+            'Surrogate-Control'              => 'no-store',
+            'X-Content-Type-Options'         => 'nosniff',
+            'ETag'                           => $etag,
+            'Last-Modified'                  => gmdate('D, d M Y H:i:s', (int) filemtime($absolute)).' GMT',
         ]);
     }
 
@@ -385,6 +391,18 @@ class PwaController extends Controller
         }
 
         Setting::add('pwa_apple_touch_published', $relative, 'string');
+
+        // Keep the fixed root filenames in sync too — iOS Safari still probes
+        // /apple-touch-icon.png even when <link> points at the hashed path.
+        foreach (['apple-touch-icon.png', 'apple-touch-icon-precomposed.png'] as $rootName) {
+            $rootDest = public_path($rootName);
+            // Prefer Laravel route over a static file that CDNs long-cache.
+            // If a stale static copy exists, replace it with the current icon
+            // then remove it so requests hit the no-store controller again.
+            if (is_file($rootDest) || is_link($rootDest)) {
+                @unlink($rootDest);
+            }
+        }
 
         return '/'.$relative;
     }
