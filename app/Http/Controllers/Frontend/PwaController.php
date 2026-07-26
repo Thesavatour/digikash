@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class PwaController extends Controller
 {
@@ -127,12 +128,14 @@ class PwaController extends Controller
         return response()
             ->view('pwa.launcher', [
                 'siteTitle'         => $this->appName(),
+                'shortName'         => $this->shortName(),
                 'themeColor'        => $this->themeColor(),
                 'backgroundColor'   => $this->backgroundColor(),
                 'foregroundColor'   => $this->onBackgroundTextColor(),
                 'mutedColor'        => $this->onBackgroundMutedColor(),
                 'spinnerTrackColor' => $this->onBackgroundSpinnerTrackColor(),
                 'iconUrl'           => $this->iconUrl('icon_192'),
+                'appleTouchIconUrl' => $this->appleTouchIconUrl(),
                 'targetUrl'         => route('user.dashboard', [], false),
                 'isLightBackground' => $this->isLightBackground(),
             ], 200, [
@@ -155,11 +158,13 @@ class PwaController extends Controller
 
         return response()
             ->view('pwa.install', [
-                'siteTitle'       => $this->appName(),
-                'themeColor'      => $this->themeColor(),
-                'backgroundColor' => $this->backgroundColor(),
-                'iconUrl'         => $this->iconUrl('icon_192'),
-                'returnUrl'       => $this->safeReturnUrl((string) $request->query('return', route('user.dashboard', [], false))),
+                'siteTitle'         => $this->appName(),
+                'shortName'         => $this->shortName(),
+                'themeColor'        => $this->themeColor(),
+                'backgroundColor'   => $this->backgroundColor(),
+                'iconUrl'           => $this->iconUrl('icon_192'),
+                'appleTouchIconUrl' => $this->appleTouchIconUrl(),
+                'returnUrl'         => $this->safeReturnUrl((string) $request->query('return', route('user.dashboard', [], false))),
             ], 200, [
                 'Cache-Control'          => 'public, max-age=300',
                 'Content-Type'           => 'text/html; charset=UTF-8',
@@ -255,7 +260,7 @@ class PwaController extends Controller
         return in_array($value, $allowed, true) ? $value : 'portrait-primary';
     }
 
-    public function iconUrl(string $key): string
+    public function iconUrl(string $key, bool $versioned = true): string
     {
         $path = $this->iconPath($key);
 
@@ -268,9 +273,52 @@ class PwaController extends Controller
         // install when APP_URL doesn't match the request host — Chrome/iOS
         // then fall back to a letter glyph from the app name.
         $relative = '/'.ltrim($path, '/');
+
+        // iOS Safari historically drops apple-touch-icon fetches that include
+        // cache-busting query strings, so Apple icons stay unversioned.
+        if (! $versioned || $key === 'apple_touch_icon') {
+            return $relative;
+        }
+
         $version = $this->iconVersion($path);
 
         return $version !== null ? $relative.'?v='.$version : $relative;
+    }
+
+    /**
+     * Stable root path iOS auto-discovers when adding to Home Screen.
+     */
+    public function appleTouchIconUrl(): string
+    {
+        return '/apple-touch-icon.png';
+    }
+
+    /**
+     * Serve the prepared 180×180 Apple touch icon at the conventional root
+     * paths Safari probes (/apple-touch-icon.png and -precomposed).
+     */
+    public function appleTouchIcon(): BinaryFileResponse|Response
+    {
+        if (! $this->isPwaEnabled()) {
+            return response('Not Found', 404);
+        }
+
+        $path = $this->iconPath('apple_touch_icon');
+        $absolute = $this->absoluteIconPath($path);
+
+        if ($absolute === null || ! is_file($absolute)) {
+            $absolute = public_path(self::FALLBACK_ICONS['apple_touch_icon']);
+        }
+
+        if (! is_file($absolute)) {
+            return response('Not Found', 404);
+        }
+
+        return response()->file($absolute, [
+            'Content-Type'           => 'image/png',
+            'Cache-Control'          => 'public, max-age=86400',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 
     private function iconPath(string $key): string

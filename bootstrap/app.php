@@ -84,6 +84,9 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::get('/offline', [PwaController::class, 'offline'])->name('pwa.offline');
             Route::get('/launch', [PwaController::class, 'launcher'])->name('pwa.launcher');
             Route::get('/install-app', [PwaController::class, 'install'])->name('pwa.install');
+            // iOS Safari auto-probes these root paths when adding to Home Screen.
+            Route::get('/apple-touch-icon.png', [PwaController::class, 'appleTouchIcon'])->name('pwa.apple-touch-icon');
+            Route::get('/apple-touch-icon-precomposed.png', [PwaController::class, 'appleTouchIcon'])->name('pwa.apple-touch-icon-precomposed');
 
             Route::middleware('web')
                 ->group(base_path('routes/install.php'));
