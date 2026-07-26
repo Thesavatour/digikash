@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Http\Controllers\Frontend\PwaController;
 use App\Models\Feature;
 use App\Models\Setting;
 use App\Traits\FileManageTrait;
@@ -35,6 +36,17 @@ class SettingService
         // Get the valid settings keys.
         $validSettings = array_keys($rules);
 
+        $pwaIconKeys = [
+            'pwa_icon_192'         => 'icon_192',
+            'pwa_icon_512'         => 'icon_512',
+            'pwa_maskable_icon'    => 'maskable_icon',
+            'pwa_apple_touch_icon' => 'apple_touch_icon',
+        ];
+        $touchedPwaIconKeys = [];
+        $oldPwaBackground = $section === 'pwa_settings'
+            ? (string) Setting::get('pwa_background_color')
+            : null;
+
         // Update the settings.
         foreach ($data as $key => $val) {
             // Check if the key is a valid setting.
@@ -47,6 +59,10 @@ class SettingService
 
                     // Upload the new image and get the path.
                     $val = self::uploadImage($val, $oldImage);
+
+                    if (isset($pwaIconKeys[$key])) {
+                        $touchedPwaIconKeys[] = $pwaIconKeys[$key];
+                    }
                 }
 
                 // Add the setting.
@@ -60,6 +76,36 @@ class SettingService
         // master toggle without duplicating logic.
         if ($section === 'agent_settings') {
             $this->syncAgentProgramFlag();
+        }
+
+        if ($section === 'pwa_settings') {
+            $backgroundChanged = $oldPwaBackground !== null
+                && array_key_exists('pwa_background_color', $data)
+                && (string) $data['pwa_background_color'] !== $oldPwaBackground;
+
+            $this->refreshPwaIconCaches($touchedPwaIconKeys, $backgroundChanged);
+        }
+    }
+
+    /**
+     * Clear prepared PWA icon composites and bump the SW cache tag so
+     * installed apps pick up new icons on the next visit.
+     *
+     * @param  list<string>  $touchedIconKeys
+     */
+    protected function refreshPwaIconCaches(array $touchedIconKeys, bool $backgroundChanged = false): void
+    {
+        if ($touchedIconKeys === [] && ! $backgroundChanged) {
+            return;
+        }
+
+        try {
+            app(PwaController::class)->bustIconCaches(
+                $touchedIconKeys !== [] ? $touchedIconKeys : null
+            );
+        } catch (\Throwable) {
+            // Never block settings save if icon cache cleanup fails.
+            Setting::add('pwa_cache_version', 'v'.now()->format('YmdHis'), 'string');
         }
     }
 

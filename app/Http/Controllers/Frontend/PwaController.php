@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
+use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -53,9 +54,15 @@ class PwaController extends Controller
             $absolute = $fallback;
         }
 
+        $etag = '"'.sha1_file($absolute).'"';
+
         return response()->file($absolute, [
             'Content-Type'  => 'image/png',
-            'Cache-Control' => 'public, max-age=604800',
+            // iOS caches /apple-touch-icon.png aggressively; short TTL + ETag
+            // so admin icon updates show up without a week-long wait.
+            'Cache-Control' => 'public, max-age=300, must-revalidate',
+            'ETag'          => $etag,
+            'Last-Modified' => gmdate('D, d M Y H:i:s', (int) filemtime($absolute)).' GMT',
         ]);
     }
 
@@ -90,9 +97,10 @@ class PwaController extends Controller
                 'prefer_related_applications' => false,
                 'icons'                       => $this->icons(),
             ], 200, [
-                'Cache-Control'          => 'public, max-age=600',
+                'Cache-Control'          => 'no-cache, must-revalidate',
                 'Content-Type'           => 'application/manifest+json',
                 'X-Content-Type-Options' => 'nosniff',
+                'ETag'                   => '"'.$this->cacheVersion().'"',
             ], JSON_UNESCAPED_SLASHES);
     }
 
@@ -304,9 +312,38 @@ class PwaController extends Controller
         // install when APP_URL doesn't match the request host — Chrome/iOS
         // then fall back to a letter glyph from the app name.
         $relative = '/'.ltrim($path, '/');
-        $version = $this->iconVersion($path);
+        $version = $this->iconVersionToken($path);
 
         return $version !== null ? $relative.'?v='.$version : $relative;
+    }
+
+    /**
+     * Bust caches after admin updates PWA icons / branding colors.
+     * Deletes prepared composites and bumps the SW cache version tag.
+     */
+    public function bustIconCaches(?array $keys = null): void
+    {
+        $keys ??= array_keys(self::FALLBACK_ICONS);
+
+        foreach ($keys as $key) {
+            $this->clearPreparedIcons((string) $key);
+        }
+
+        Setting::add('pwa_cache_version', 'v'.now()->format('YmdHis'), 'string');
+    }
+
+    private function clearPreparedIcons(string $key): void
+    {
+        $disk = Storage::disk('public');
+        if (! $disk->exists('pwa/prepared')) {
+            return;
+        }
+
+        foreach ($disk->files('pwa/prepared') as $file) {
+            if (str_starts_with(basename($file), $key.'-')) {
+                $disk->delete($file);
+            }
+        }
     }
 
     private function iconPath(string $key): string
@@ -352,7 +389,8 @@ class PwaController extends Controller
         $height     = (int) $dimensions[1];
         $bgHex      = $this->backgroundColor();
         $safeScale  = $key === 'maskable_icon' ? 0.72 : 0.86;
-        $fingerprint = substr(sha1($absolute.'|'.filemtime($absolute).'|'.$bgHex.'|'.$width.'|'.$safeScale), 0, 16);
+        $contentHash = @sha1_file($absolute) ?: (string) filemtime($absolute);
+        $fingerprint = substr(sha1($absolute.'|'.$contentHash.'|'.$bgHex.'|'.$width.'|'.$safeScale), 0, 16);
         $relative   = 'pwa/prepared/'.$key.'-'.$fingerprint.'.png';
 
         if (Storage::disk('public')->exists($relative)) {
@@ -504,6 +542,18 @@ class PwaController extends Controller
         return $absolute !== null && is_file($absolute) ? (int) filemtime($absolute) : null;
     }
 
+    private function iconVersionToken(string $path): ?string
+    {
+        $absolute = $this->absoluteIconPath($path);
+        if ($absolute === null || ! is_file($absolute)) {
+            return null;
+        }
+
+        $hash = @sha1_file($absolute) ?: (string) filemtime($absolute);
+
+        return substr($hash, 0, 12);
+    }
+
     private function browserIconPath(string $path): string
     {
         if (filter_var($path, FILTER_VALIDATE_URL)) {
@@ -586,6 +636,14 @@ class PwaController extends Controller
         $combined = $appVersion.'-'.$assetMtime.'-'.$settingsFingerprint.($manualTag !== '' ? '-'.$manualTag : '');
 
         return preg_replace('/[^A-Za-z0-9_.-]/', '-', $combined) ?: '1';
+    }
+
+    /**
+     * Public wrapper for Blade / meta cache busting.
+     */
+    public function cacheVersionPublic(): string
+    {
+        return $this->cacheVersion();
     }
 
     /**
@@ -755,8 +813,11 @@ JS;
             '/general/static/',
             '/general/webfonts/',
             '/pwa/',
+            '/storage/pwa/',
             '/images/',
             '/storage/images/',
+            '/apple-touch-icon.png',
+            '/apple-touch-icon-precomposed.png',
         ];
     }
 
