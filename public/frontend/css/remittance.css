@@ -1,0 +1,1310 @@
+/* ============================================================
+   Digikash · Remittance — user-side design system
+   Translated from the design canvas (DigiKash Remittance.html)
+   into static CSS the project can serve from public/.
+
+   All classes are prefixed .dk-rmt so they don't collide with
+   the Digikash theme or Bootstrap utilities.
+   ============================================================ */
+
+:root {
+    --dk-rmt-primary:        #4663ee;
+    --dk-rmt-primary-hover:  #354ccc;
+    --dk-rmt-primary-dark:   #354c8c;
+    --dk-rmt-secondary:      #22bdff;
+    --dk-rmt-success:        #16a34a;
+    --dk-rmt-warning:        #d97706;
+    --dk-rmt-danger:         #ef4444;
+
+    --dk-rmt-bg:             #f3f7fb;
+    --dk-rmt-card:           #ffffff;
+    --dk-rmt-soft:           #f8faff;
+    --dk-rmt-heading:        #181818;
+    --dk-rmt-body:           #374151;
+    --dk-rmt-muted:          #6b7280;
+    --dk-rmt-border:         #e3e7ff;
+    --dk-rmt-border-soft:    #eef1f5;
+
+    --dk-rmt-shadow-hero:    0 12px 30px -10px rgba(70,99,238,.14);
+    --dk-rmt-shadow-card:    0 1px 2px rgba(17,24,39,.04);
+    --dk-rmt-focus:          0 0 0 3px rgba(70,99,238,.22);
+
+    --dk-rmt-r-card:   16px;
+    --dk-rmt-r-input:  10px;
+    --dk-rmt-r-btn:    10px;
+    --dk-rmt-r-pill:   999px;
+
+    --dk-rmt-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ------------------------------------------------------------
+   UTILITY CLASSES — replace common inline style patterns so
+   AGENTS.md "no inline style" rule holds across remittance views.
+   ------------------------------------------------------------ */
+.dk-rmt__flex            { display: flex; }
+.dk-rmt__flex-center     { display: flex; align-items: center; gap: 8px; }
+.dk-rmt__flex-1          { flex: 1; min-width: 0; }
+.dk-rmt__relative        { position: relative; }
+.dk-rmt__center-text     { text-align: center; }
+.dk-rmt__right-text      { text-align: right; }
+.dk-rmt__mono-inline     { font-family: var(--dk-rmt-mono); font-size: 12.5px; }
+
+/* Small icon tint helpers */
+.dk-rmt__icon-success    { color: var(--dk-rmt-success); }
+.dk-rmt__icon-warning    { color: var(--dk-rmt-warning); }
+.dk-rmt__icon-primary    { color: var(--dk-rmt-primary); }
+.dk-rmt__icon-muted      { color: var(--dk-rmt-muted); }
+
+/* Sidebar rail title — was inline:font-weight:700 etc */
+.dk-rmt__rail-section-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--dk-rmt-heading);
+    margin-bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Step number indicator inside iconbox (used on Add Recipient form) */
+.dk-rmt__step-number {
+    font-weight: 800;
+    font-size: 12px;
+}
+
+/* Section number container in form sections */
+.dk-rmt__form-section-head {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    align-items: flex-start;
+}
+.dk-rmt__form-section-title {
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--dk-rmt-heading);
+}
+.dk-rmt__form-section-hint {
+    font-size: 12px;
+    color: var(--dk-rmt-muted);
+}
+
+/* Quote review — "what happens next" rail step rows */
+.dk-rmt__nextstep-row { display: flex; gap: 12px; align-items: flex-start; }
+.dk-rmt__nextstep-title { font-weight: 600; font-size: 13px; color: var(--dk-rmt-heading); }
+.dk-rmt__nextstep-sub   { font-size: 11.5px; color: var(--dk-rmt-muted); }
+
+/* Tracking hero variants */
+.dk-rmt__tracking-hero {
+    text-align: center;
+    padding: 32px 28px;
+}
+.dk-rmt__tracking-hero-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: grid;
+    place-items: center;
+    font-size: 32px;
+}
+.dk-rmt__tracking-hero-icon--success { background: #dcfce7; color: var(--dk-rmt-success); }
+.dk-rmt__tracking-hero-icon--danger  { background: #fee2e2; color: var(--dk-rmt-danger); }
+.dk-rmt__tracking-hero-icon--info    { background: #eef2ff; color: var(--dk-rmt-primary); }
+
+/* Reference chip with copy button */
+.dk-rmt__ref-chip {
+    background: #fff;
+    padding: 3px 10px;
+    border-radius: 7px;
+    border: 1px solid var(--dk-rmt-border);
+    font-weight: 700;
+    color: var(--dk-rmt-heading);
+    margin-left: 6px;
+    font-size: 13px;
+    font-family: var(--dk-rmt-mono);
+}
+.dk-rmt__ref-copy-btn {
+    background: transparent;
+    border: none;
+    color: var(--dk-rmt-primary);
+    font-weight: 600;
+    margin-left: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+/* ------------------------------------------------------------
+   ROOT WRAPPER — scoped under .dk-rmt so we don't leak globals
+   ------------------------------------------------------------ */
+.dk-rmt {
+    color: var(--dk-rmt-body);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+}
+.dk-rmt h1, .dk-rmt h2, .dk-rmt h3, .dk-rmt h4, .dk-rmt h5, .dk-rmt h6 {
+    color: var(--dk-rmt-heading);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+}
+.dk-rmt .dk-mono { font-family: var(--dk-rmt-mono); font-variant-numeric: tabular-nums; }
+.dk-rmt a { text-decoration: none; }
+
+/* ------------------------------------------------------------
+   CARDS
+   ------------------------------------------------------------ */
+.dk-rmt__card {
+    background: var(--dk-rmt-card);
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: var(--dk-rmt-r-card);
+    box-shadow: var(--dk-rmt-shadow-card);
+    padding: 20px;
+}
+.dk-rmt__card--soft {
+    background: var(--dk-rmt-soft);
+}
+.dk-rmt__card--hero {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f6ff 100%);
+    box-shadow: var(--dk-rmt-shadow-hero);
+    padding: 28px;
+}
+.dk-rmt__card--hero::before {
+    content: '';
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(34, 189, 255, .20), transparent 70%);
+    pointer-events: none;
+}
+.dk-rmt__hero-title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+}
+.dk-rmt__hero-sub {
+    font-size: 14px;
+    color: var(--dk-rmt-muted);
+    margin-top: 6px;
+}
+
+/* ------------------------------------------------------------
+   LABELS, INPUTS, SELECTS
+   ------------------------------------------------------------ */
+.dk-rmt__label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dk-rmt-body);
+    margin-bottom: 6px;
+    letter-spacing: 0.01em;
+}
+.dk-rmt__input,
+.dk-rmt__select {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: var(--dk-rmt-r-input);
+    border: 1px solid var(--dk-rmt-border);
+    background: #fff;
+    color: var(--dk-rmt-heading);
+    font: 500 14px/1 "Plus Jakarta Sans", system-ui, sans-serif;
+    outline: none;
+    transition: box-shadow .15s, border-color .15s;
+}
+.dk-rmt__input:focus,
+.dk-rmt__select:focus,
+.dk-rmt__input.is-focus,
+.dk-rmt__select.is-focus {
+    border-color: var(--dk-rmt-primary);
+    box-shadow: var(--dk-rmt-focus);
+}
+.dk-rmt__input::placeholder { color: var(--dk-rmt-muted); font-weight: 400; }
+.dk-rmt__input--lg {
+    height: 52px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    padding-right: 100px;
+}
+/* Custom select: drop the native browser chevron (which sat flush against the
+   right edge and looked cramped) and paint our own SVG caret with comfortable
+   right-side padding. */
+.dk-rmt__select {
+    cursor: pointer;
+    padding-right: 40px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236B7185' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='4 6 8 10 12 6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    background-size: 16px 16px;
+}
+.dk-rmt__select::-ms-expand { display: none; }
+
+/* ------------------------------------------------------------
+   BUTTONS
+   ------------------------------------------------------------ */
+.dk-rmt__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 44px;
+    padding: 0 18px;
+    border-radius: var(--dk-rmt-r-btn);
+    font: 600 14px "Plus Jakarta Sans", system-ui, sans-serif;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .15s, transform .15s, box-shadow .15s, border-color .15s, color .15s;
+    white-space: nowrap;
+}
+.dk-rmt__btn--primary {
+    background: var(--dk-rmt-primary);
+    color: #fff;
+}
+.dk-rmt__btn--primary:hover {
+    background: var(--dk-rmt-primary-hover);
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -4px rgba(70, 99, 238, .45);
+}
+.dk-rmt__btn--secondary {
+    background: #fff;
+    color: var(--dk-rmt-primary);
+    border-color: var(--dk-rmt-primary);
+}
+.dk-rmt__btn--secondary:hover { background: var(--dk-rmt-soft); color: var(--dk-rmt-primary); }
+.dk-rmt__btn--ghost { background: transparent; color: var(--dk-rmt-body); }
+.dk-rmt__btn--ghost:hover { background: var(--dk-rmt-soft); color: var(--dk-rmt-heading); }
+.dk-rmt__btn--danger {
+    background: #fff;
+    color: var(--dk-rmt-danger);
+    border-color: var(--dk-rmt-danger);
+}
+.dk-rmt__btn--lg { height: 52px; font-size: 15px; padding: 0 22px; }
+.dk-rmt__btn--full { width: 100%; }
+.dk-rmt__btn:disabled,
+.dk-rmt__btn.is-disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; pointer-events: none; }
+
+/* ------------------------------------------------------------
+   STATUS PILLS
+   ------------------------------------------------------------ */
+.dk-rmt__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: var(--dk-rmt-r-pill);
+    font: 700 11px "Plus Jakarta Sans", sans-serif;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    line-height: 1;
+}
+.dk-rmt__pill .dk-rmt__pill-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .6);
+}
+.dk-rmt__pill--success { color: #15803d; background: #dcfce7; }
+.dk-rmt__pill--warning { color: #b45309; background: #fef3c7; }
+.dk-rmt__pill--danger  { color: #b91c1c; background: #fee2e2; }
+.dk-rmt__pill--info    { color: #1d4ed8; background: #dbeafe; }
+.dk-rmt__pill--primary { color: #6d28d9; background: #ede9fe; }
+.dk-rmt__pill--muted   { color: var(--dk-rmt-muted); background: var(--dk-rmt-border-soft); }
+
+/* ------------------------------------------------------------
+   ALERTS
+   ------------------------------------------------------------ */
+.dk-rmt__alert {
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13.5px;
+    line-height: 1.45;
+}
+.dk-rmt__alert--warning { background: #fef3c7; color: #92400e; }
+.dk-rmt__alert--danger  { background: #fee2e2; color: #991b1b; }
+.dk-rmt__alert--info    { background: #e0e7ff; color: #3730a3; }
+.dk-rmt__alert--success { background: #dcfce7; color: #14532d; }
+.dk-rmt__alert > i:first-child { font-size: 16px; margin-top: 2px; flex: none; }
+
+/* ------------------------------------------------------------
+   FLAG CIRCLE, AVATAR, ICON BOX
+   ------------------------------------------------------------ */
+.dk-rmt__flag {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid var(--dk-rmt-border);
+    display: inline-grid;
+    place-items: center;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 18px;
+    line-height: 1;
+    flex: none;
+    overflow: hidden;
+}
+.dk-rmt__flag--lg { width: 40px; height: 40px; font-size: 22px; }
+.dk-rmt__flag--sm { width: 22px; height: 22px; font-size: 13px; }
+
+.dk-rmt__avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: inline-grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: .02em;
+    flex: none;
+    text-transform: uppercase;
+}
+.dk-rmt__avatar--lg { width: 48px; height: 48px; font-size: 16px; }
+.dk-rmt__avatar--sm { width: 36px; height: 36px; font-size: 12px; }
+.dk-rmt__avatar--indigo { background: #eef2ff; color: #4338ca; }
+.dk-rmt__avatar--rose   { background: #ffe4e6; color: #be123c; }
+.dk-rmt__avatar--amber  { background: #fef3c7; color: #b45309; }
+.dk-rmt__avatar--teal   { background: #ccfbf1; color: #0f766e; }
+.dk-rmt__avatar--violet { background: #ede9fe; color: #6d28d9; }
+.dk-rmt__avatar--sky    { background: #e0f2fe; color: #0369a1; }
+
+.dk-rmt__iconbox {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: inline-grid;
+    place-items: center;
+    font-size: 15px;
+    flex: none;
+    background: #eef2ff;
+    color: var(--dk-rmt-primary);
+}
+.dk-rmt__iconbox--sm { width: 32px; height: 32px; font-size: 13px; }
+.dk-rmt__iconbox--success { background: #dcfce7; color: #15803d; }
+.dk-rmt__iconbox--warning { background: #fef3c7; color: #b45309; }
+.dk-rmt__iconbox--muted   { background: #f1f5f9; color: var(--dk-rmt-body); }
+
+/* ------------------------------------------------------------
+   MASKED ACCOUNT (mono small line under names)
+   ------------------------------------------------------------ */
+.dk-rmt__masked {
+    font-family: var(--dk-rmt-mono);
+    font-size: 12px;
+    color: var(--dk-rmt-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: .02em;
+}
+.dk-rmt__masked > i { font-size: 11px; }
+
+/* ------------------------------------------------------------
+   AMOUNT FIELD — large input with live recipient preview
+   ------------------------------------------------------------ */
+.dk-rmt__amount {
+    padding: 18px;
+}
+.dk-rmt__amount-wrap { position: relative; }
+.dk-rmt__amount-suffix {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    background: var(--dk-rmt-soft);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--dk-rmt-heading);
+}
+.dk-rmt__amount-preview {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-top: 12px;
+}
+.dk-rmt__amount-preview-label {
+    font-size: 12px;
+    color: var(--dk-rmt-muted);
+    font-weight: 500;
+    margin-bottom: 4px;
+}
+.dk-rmt__amount-preview-value {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dk-rmt-success);
+    line-height: 1;
+}
+.dk-rmt__amount-preview-value small {
+    font-size: 16px;
+    color: var(--dk-rmt-success);
+}
+.dk-rmt__amount-rate-label { font-size: 11px; color: var(--dk-rmt-muted); }
+.dk-rmt__amount-rate { font-size: 12.5px; font-weight: 600; color: var(--dk-rmt-heading); }
+.dk-rmt__amount-strip {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: var(--dk-rmt-soft);
+    border: 1px dashed var(--dk-rmt-border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 12.5px;
+    flex-wrap: wrap;
+}
+.dk-rmt__amount-strip strong { color: var(--dk-rmt-heading); }
+.dk-rmt__amount-strip-dot {
+    width: 4px; height: 4px; border-radius: 2px;
+    background: var(--dk-rmt-border);
+}
+
+/* ------------------------------------------------------------
+   QUICK CORRIDOR CHIPS
+   ------------------------------------------------------------ */
+.dk-rmt__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.dk-rmt__chip {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 10px;
+    border: 1px solid var(--dk-rmt-border);
+    background: #fff;
+    color: var(--dk-rmt-body);
+    font: 600 12.5px "Plus Jakarta Sans", sans-serif;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+}
+.dk-rmt__chip:hover { background: var(--dk-rmt-soft); border-color: #c7d2fe; }
+.dk-rmt__chip.is-active {
+    background: var(--dk-rmt-primary);
+    color: #fff;
+    border-color: var(--dk-rmt-primary);
+}
+.dk-rmt__chip-flag {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 14px;
+    line-height: 1;
+}
+
+/* Label meta + link */
+.dk-rmt__label-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--dk-rmt-muted);
+    font-weight: 500;
+}
+.dk-rmt__label-meta i { font-size: 10px; }
+.dk-rmt__label-link {
+    color: var(--dk-rmt-primary);
+    font-weight: 600;
+    font-size: 12.5px;
+    text-decoration: none;
+}
+.dk-rmt__label-link:hover { text-decoration: underline; color: var(--dk-rmt-primary); }
+
+/* Amount strip — make items wrap nicely */
+.dk-rmt__amount-strip-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--dk-rmt-body);
+    font-weight: 500;
+    font-size: 12.5px;
+}
+.dk-rmt__amount-strip-item > i { color: var(--dk-rmt-primary); }
+.dk-rmt__amount-strip-item strong { color: var(--dk-rmt-heading); font-weight: 700; }
+.dk-rmt__amount-hint {
+    font-size: 11.5px;
+    color: var(--dk-rmt-muted);
+    margin-top: 8px;
+    font-weight: 500;
+}
+
+/* Empty inline slot used when methods list is empty */
+.dk-rmt__empty-inline {
+    padding: 20px;
+    text-align: center;
+    background: var(--dk-rmt-soft);
+    border-radius: 12px;
+    color: var(--dk-rmt-muted);
+    font-size: 13px;
+    border: 1px dashed var(--dk-rmt-border);
+}
+
+/* Compact hint row — used when payout methods aren't loaded yet.
+   Single thin line with icon + message, premium and unobtrusive. */
+.dk-rmt__methods-hint {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 14px;
+    background: var(--dk-rmt-soft);
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: 10px;
+    color: var(--dk-rmt-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.3;
+}
+.dk-rmt__methods-hint > i {
+    color: var(--dk-rmt-primary);
+    font-size: 13px;
+    flex-shrink: 0;
+}
+.dk-rmt__methods-hint--warning {
+    background: #fef3c7;
+    border-color: #fde68a;
+    color: #92400e;
+}
+.dk-rmt__methods-hint--warning > i { color: var(--dk-rmt-warning); }
+
+/* Recipients empty card — full-width premium CTA when user has 0 saved.
+   Replaces the lonely "+ New" circle that left half the row blank. */
+.dk-rmt__recipients-empty {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px 12px 12px;
+    background: linear-gradient(135deg, #ffffff 0%, var(--dk-rmt-soft) 100%);
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: 12px;
+    color: var(--dk-rmt-body);
+    text-decoration: none;
+    transition: border-color .15s, background .15s, transform .15s;
+}
+.dk-rmt__recipients-empty:hover {
+    border-color: var(--dk-rmt-primary);
+    background: #fff;
+    transform: translateY(-1px);
+    color: var(--dk-rmt-body);
+}
+.dk-rmt__recipients-empty-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--dk-rmt-primary);
+    border: 1.5px dashed var(--dk-rmt-primary);
+    font-size: 16px;
+    flex-shrink: 0;
+}
+.dk-rmt__recipients-empty-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.dk-rmt__recipients-empty-title {
+    font-weight: 700;
+    color: var(--dk-rmt-heading);
+    font-size: 14px;
+    line-height: 1.25;
+}
+.dk-rmt__recipients-empty-sub {
+    font-size: 12px;
+    color: var(--dk-rmt-muted);
+    line-height: 1.3;
+}
+.dk-rmt__recipients-empty-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--dk-rmt-primary);
+    color: #fff;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px -4px rgba(70, 99, 238, .45);
+}
+.dk-rmt__recipients-empty:hover .dk-rmt__recipients-empty-cta {
+    background: var(--dk-rmt-primary-hover);
+    box-shadow: 0 6px 14px -4px rgba(70, 99, 238, .55);
+}
+@media (max-width: 575.98px) {
+    .dk-rmt__recipients-empty { flex-wrap: wrap; gap: 10px; }
+    .dk-rmt__recipients-empty-body { flex-basis: calc(100% - 60px); }
+    .dk-rmt__recipients-empty-cta { width: 100%; justify-content: center; }
+}
+
+/* Hidden radio for recipient cards */
+.dk-rmt__recipient-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* CTA row at the bottom of the form — clean hairline, no dashed border */
+.dk-rmt__cta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid var(--dk-rmt-border-soft);
+    margin-top: 8px;
+}
+.dk-rmt__cta-safeguard {
+    font-size: 12.5px;
+    color: var(--dk-rmt-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+.dk-rmt__cta-safeguard > i {
+    font-size: 13px;
+}
+
+/* Right-rail wallet card */
+.dk-rmt__wallet-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.dk-rmt__wallet-label { font-size: 12px; color: var(--dk-rmt-muted); }
+.dk-rmt__wallet-name { font-weight: 700; font-size: 15px; color: var(--dk-rmt-heading); }
+.dk-rmt__wallet-amount {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dk-rmt-heading);
+    line-height: 1.15;
+}
+.dk-rmt__wallet-sub { font-size: 12px; color: var(--dk-rmt-muted); margin-top: 2px; }
+
+/* Right-rail value props */
+.dk-rmt__rail-title {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--dk-rmt-heading);
+    margin-bottom: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.dk-rmt__props { display: flex; flex-direction: column; gap: 14px; }
+.dk-rmt__prop { display: flex; gap: 12px; align-items: flex-start; }
+.dk-rmt__prop-title { font-weight: 600; font-size: 13px; color: var(--dk-rmt-heading); }
+.dk-rmt__prop-sub   { font-size: 11.5px; color: var(--dk-rmt-muted); }
+
+/* ------------------------------------------------------------
+   COUNTRY DROPDOWN ROW (rich select)
+   ------------------------------------------------------------ */
+.dk-rmt__country-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: var(--dk-rmt-r-input);
+    background: #fff;
+    cursor: pointer;
+    min-height: 52px;
+    text-decoration: none;
+    color: inherit;
+}
+.dk-rmt__country-row > .dk-rmt__country-text { flex: 1; line-height: 1.25; min-width: 0; }
+.dk-rmt__country-name { font-weight: 600; color: var(--dk-rmt-heading); }
+.dk-rmt__country-sub  { font-size: 11.5px; color: var(--dk-rmt-muted); }
+
+/* ------------------------------------------------------------
+   PAYOUT METHOD CARDS (radio replacement)
+   ------------------------------------------------------------ */
+.dk-rmt__methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 8px;
+}
+.dk-rmt__method {
+    position: relative;
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: 12px;
+    background: #fff;
+    padding: 10px 12px;
+    display: flex;
+    gap: 10px;
+    /* `center` keeps the icon + text + radio dot on the same baseline, so the
+       card hugs its content with no awkward whitespace below. Removing the
+       72px min-height lets each card size to its content — the grid still
+       equalises row heights because all cards share `auto` row sizing, but
+       the minimum is now whatever the tallest sibling actually needs. */
+    align-items: center;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, box-shadow .15s;
+    margin: 0;
+}
+.dk-rmt__method:hover { border-color: #c7d2fe; background: var(--dk-rmt-soft); }
+.dk-rmt__method-radio {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    margin: 0;
+}
+.dk-rmt__method-body { flex: 1; min-width: 0; }
+.dk-rmt__method-name {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: var(--dk-rmt-heading);
+    line-height: 1.2;
+}
+.dk-rmt__method-sub {
+    font-size: 11.5px;
+    color: var(--dk-rmt-muted);
+    margin-top: 2px;
+    line-height: 1.3;
+}
+.dk-rmt__method-dot {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--dk-rmt-border);
+    background: #fff;
+    flex: none;
+    position: relative;
+    margin-top: 2px;
+}
+.dk-rmt__method.is-on {
+    border-color: var(--dk-rmt-primary);
+    background: var(--dk-rmt-soft);
+    box-shadow: 0 0 0 2px rgba(70, 99, 238, .15);
+}
+.dk-rmt__method.is-on .dk-rmt__iconbox { background: #eef2ff; color: var(--dk-rmt-primary); }
+.dk-rmt__method.is-on .dk-rmt__method-dot { border-color: var(--dk-rmt-primary); background: var(--dk-rmt-primary); }
+.dk-rmt__method.is-on .dk-rmt__method-dot::after {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* ------------------------------------------------------------
+   FAVORITE TOGGLE — beneficiary form
+   A single-card toggle with icon + title + sub + iOS-style switch.
+   The whole card is the click target. Designed to feel premium
+   without competing with the primary form fields above it.
+   ------------------------------------------------------------ */
+.dk-rmt__favorite {
+    display: block;
+    cursor: pointer;
+    margin: 0;
+    position: relative;
+}
+/* The real checkbox is visually hidden but still focusable for keyboard
+   navigation and announced by screen readers — never use display:none on
+   form inputs you want a11y on. */
+.dk-rmt__favorite-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    padding: 0;
+    margin: -1px;
+    opacity: 0;
+}
+.dk-rmt__favorite-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: 12px;
+    background: #fff;
+    transition: border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.dk-rmt__favorite:hover .dk-rmt__favorite-card {
+    border-color: #fcd34d;
+    background: #fffdf5;
+}
+.dk-rmt__favorite-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: #fef3c7;
+    color: #d97706;
+    font-size: 16px;
+    flex: none;
+    transition: background .18s ease, color .18s ease, transform .25s ease;
+}
+.dk-rmt__favorite-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.dk-rmt__favorite-title {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--dk-rmt-heading);
+    line-height: 1.2;
+}
+.dk-rmt__favorite-sub {
+    font-size: 11.5px;
+    color: var(--dk-rmt-muted);
+    line-height: 1.35;
+}
+.dk-rmt__favorite-switch {
+    width: 36px;
+    height: 20px;
+    border-radius: 999px;
+    background: #e5e7eb;
+    position: relative;
+    flex: none;
+    transition: background .2s ease;
+}
+.dk-rmt__favorite-switch-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
+    transition: transform .25s cubic-bezier(.4, 0, .2, 1);
+}
+
+/* Active state — gold theme, filled star, animated switch */
+.dk-rmt__favorite-input:checked + .dk-rmt__favorite-card {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, .12);
+}
+.dk-rmt__favorite-input:checked + .dk-rmt__favorite-card .dk-rmt__favorite-icon {
+    background: #f59e0b;
+    color: #fff;
+    transform: scale(1.06) rotate(-6deg);
+}
+.dk-rmt__favorite-input:checked + .dk-rmt__favorite-card .dk-rmt__favorite-switch {
+    background: #f59e0b;
+}
+.dk-rmt__favorite-input:checked + .dk-rmt__favorite-card .dk-rmt__favorite-switch-knob {
+    transform: translateX(16px);
+}
+
+/* Keyboard focus — gold focus ring matches the active palette */
+.dk-rmt__favorite-input:focus-visible + .dk-rmt__favorite-card {
+    border-color: #f59e0b;
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, .28);
+}
+
+/* ------------------------------------------------------------
+   RECIPIENT PICKER — horizontal avatars
+   ------------------------------------------------------------ */
+.dk-rmt__recipients {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 2px 6px;
+    margin-bottom: 10px;
+}
+.dk-rmt__recipient {
+    flex: none;
+    width: 68px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+.dk-rmt__recipient-photo { position: relative; }
+.dk-rmt__recipient-flag {
+    position: absolute;
+    right: -2px;
+    bottom: -2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid #fff;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+    line-height: 1;
+    box-shadow: 0 0 0 1px var(--dk-rmt-border);
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+}
+.dk-rmt__recipient.is-active .dk-rmt__avatar { box-shadow: 0 0 0 3px var(--dk-rmt-primary); }
+.dk-rmt__recipient-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--dk-rmt-heading);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    text-align: center;
+}
+.dk-rmt__recipient--new .dk-rmt__avatar {
+    background: #fff;
+    color: var(--dk-rmt-primary);
+    border: 1.5px dashed var(--dk-rmt-primary);
+    font-size: 16px;
+}
+.dk-rmt__recipient--new .dk-rmt__recipient-name { color: var(--dk-rmt-primary); }
+
+/* ------------------------------------------------------------
+   QUOTE SUMMARY TABLE
+   ------------------------------------------------------------ */
+.dk-rmt__rows { display: flex; flex-direction: column; gap: 10px; }
+.dk-rmt__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+.dk-rmt__row-key {
+    font-size: 13.5px;
+    color: var(--dk-rmt-muted);
+    font-weight: 500;
+}
+.dk-rmt__row-val {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dk-rmt-heading);
+    text-align: right;
+}
+.dk-rmt__row--bold .dk-rmt__row-val { font-size: 17px; font-weight: 700; }
+.dk-rmt__row-divider {
+    height: 1px;
+    border-top: 1px dashed var(--dk-rmt-border);
+    margin: 4px 0;
+}
+.dk-rmt__row-receive {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 2px;
+}
+.dk-rmt__row-receive-label { font-size: 13px; color: var(--dk-rmt-muted); font-weight: 500; }
+.dk-rmt__row-receive-amount {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dk-rmt-success);
+    line-height: 1;
+}
+.dk-rmt__row-receive-amount small { font-size: 16px; font-weight: 700; }
+
+/* ------------------------------------------------------------
+   RATE LOCK COUNTDOWN BANNER
+   ------------------------------------------------------------ */
+.dk-rmt__lock {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: var(--dk-rmt-soft);
+    border: 1px solid var(--dk-rmt-border);
+}
+.dk-rmt__lock.is-urgent { background: #fef3c7; border-color: #fde68a; }
+.dk-rmt__lock-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dk-rmt__lock-left > i { color: var(--dk-rmt-primary); font-size: 14px; }
+.dk-rmt__lock.is-urgent .dk-rmt__lock-left > i { color: var(--dk-rmt-warning); }
+.dk-rmt__lock-title { font-weight: 600; font-size: 13px; color: var(--dk-rmt-heading); }
+.dk-rmt__lock.is-urgent .dk-rmt__lock-title { color: #92400e; }
+.dk-rmt__lock-sub { font-size: 11.5px; color: var(--dk-rmt-muted); }
+.dk-rmt__lock-time {
+    font-family: var(--dk-rmt-mono);
+    font-size: 18px;
+    font-weight: 700;
+    background: #fff;
+    color: var(--dk-rmt-heading);
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--dk-rmt-border);
+    flex: none;
+}
+.dk-rmt__lock.is-urgent .dk-rmt__lock-time { color: #92400e; border-color: #fde68a; }
+
+/* ------------------------------------------------------------
+   4-STEP TRACKING STEPPER
+   ------------------------------------------------------------ */
+.dk-rmt__stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.dk-rmt__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 64px;
+    flex: 1;
+}
+.dk-rmt__step-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--dk-rmt-border-soft);
+    color: var(--dk-rmt-border);
+    display: grid;
+    place-items: center;
+    font-size: 13px;
+}
+.dk-rmt__step-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--dk-rmt-muted);
+    text-align: center;
+}
+.dk-rmt__step.is-done .dk-rmt__step-circle { background: #dcfce7; color: var(--dk-rmt-success); }
+.dk-rmt__step.is-done .dk-rmt__step-label  { color: var(--dk-rmt-success); }
+.dk-rmt__step.is-active .dk-rmt__step-circle {
+    background: #eef2ff;
+    color: var(--dk-rmt-primary);
+    border: 2px solid var(--dk-rmt-primary);
+    box-shadow: 0 0 0 4px rgba(70, 99, 238, .15);
+}
+.dk-rmt__step.is-active .dk-rmt__step-label { color: var(--dk-rmt-primary); }
+.dk-rmt__step-bar {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--dk-rmt-border);
+    margin-top: -18px;
+}
+.dk-rmt__step-bar.is-done { background: var(--dk-rmt-success); }
+.dk-rmt__step-bar.is-half { background: linear-gradient(90deg, var(--dk-rmt-success) 50%, var(--dk-rmt-border) 50%); }
+
+/* ------------------------------------------------------------
+   TIMELINE
+   ------------------------------------------------------------ */
+.dk-rmt__timeline {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 8px;
+}
+.dk-rmt__timeline-row {
+    display: flex;
+    gap: 14px;
+    position: relative;
+    padding-bottom: 16px;
+}
+.dk-rmt__timeline-row:last-child { padding-bottom: 0; }
+.dk-rmt__timeline-marker {
+    position: relative;
+    width: 10px;
+    flex: none;
+}
+.dk-rmt__timeline-marker > span {
+    display: block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--dk-rmt-primary);
+    margin-top: 4px;
+    box-shadow: 0 0 0 3px #eef2ff;
+}
+.dk-rmt__timeline-row.is-warning .dk-rmt__timeline-marker > span {
+    background: var(--dk-rmt-warning);
+    box-shadow: 0 0 0 3px #fef3c7;
+}
+.dk-rmt__timeline-row.is-success .dk-rmt__timeline-marker > span {
+    background: var(--dk-rmt-success);
+    box-shadow: 0 0 0 3px #dcfce7;
+}
+.dk-rmt__timeline-row:not(:last-child) .dk-rmt__timeline-marker::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 16px;
+    bottom: -6px;
+    width: 2px;
+    background: var(--dk-rmt-border);
+}
+.dk-rmt__timeline-time { font-size: 11px; color: var(--dk-rmt-muted); }
+.dk-rmt__timeline-text {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--dk-rmt-heading);
+}
+.dk-rmt__timeline-meta { font-size: 12px; color: var(--dk-rmt-muted); }
+
+/* ------------------------------------------------------------
+   HISTORY ROWS (compact transfer list)
+   ------------------------------------------------------------ */
+.dk-rmt__history { display: flex; flex-direction: column; gap: 10px; }
+.dk-rmt__history-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: 14px;
+    text-decoration: none;
+    color: inherit;
+    transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.dk-rmt__history-row:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 6px 18px -10px rgba(70, 99, 238, .25);
+    transform: translateY(-1px);
+}
+.dk-rmt__history-name { font-weight: 700; font-size: 14px; color: var(--dk-rmt-heading); }
+.dk-rmt__history-amounts {
+    font-size: 12.5px;
+    color: var(--dk-rmt-muted);
+    margin-top: 2px;
+}
+.dk-rmt__history-amounts strong { color: var(--dk-rmt-heading); font-weight: 600; }
+.dk-rmt__history-meta {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+.dk-rmt__history-time { font-size: 11.5px; color: var(--dk-rmt-muted); }
+
+/* ------------------------------------------------------------
+   RECIPIENTS GRID (Screen 5)
+   ------------------------------------------------------------ */
+.dk-rmt__people {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+.dk-rmt__person {
+    background: #fff;
+    border: 1px solid var(--dk-rmt-border);
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color .15s, box-shadow .15s;
+}
+.dk-rmt__person:hover {
+    border-color: #c7d2fe;
+    box-shadow: 0 6px 18px -10px rgba(70, 99, 238, .2);
+}
+.dk-rmt__person-head { display: flex; align-items: flex-start; gap: 12px; }
+.dk-rmt__person-name {
+    font-weight: 700;
+    font-size: 14.5px;
+    color: var(--dk-rmt-heading);
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.dk-rmt__person-name .dk-rmt__star { color: #f59e0b; font-size: 12px; }
+.dk-rmt__person-nick {
+    font-size: 11.5px;
+    color: var(--dk-rmt-muted);
+    margin-top: 2px;
+}
+.dk-rmt__person-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--dk-rmt-body);
+}
+.dk-rmt__person-row i { color: var(--dk-rmt-muted); width: 14px; text-align: center; }
+.dk-rmt__person-actions { display: flex; gap: 8px; margin-top: 4px; }
+.dk-rmt__person-actions .dk-rmt__btn {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 13px;
+}
+
+/* ------------------------------------------------------------
+   EMPTY STATE
+   ------------------------------------------------------------ */
+.dk-rmt__empty {
+    text-align: center;
+    padding: 48px 24px;
+}
+.dk-rmt__empty-icon {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--dk-rmt-soft);
+    color: var(--dk-rmt-primary);
+    margin: 0 auto 18px;
+    display: grid;
+    place-items: center;
+    font-size: 28px;
+    border: 1px dashed var(--dk-rmt-border);
+}
+.dk-rmt__empty-title { font-size: 18px; font-weight: 700; color: var(--dk-rmt-heading); }
+.dk-rmt__empty-text {
+    font-size: 13.5px;
+    color: var(--dk-rmt-muted);
+    max-width: 380px;
+    margin: 6px auto 18px;
+}
+
+/* ------------------------------------------------------------
+   MOBILE TWEAKS
+   ------------------------------------------------------------ */
+@media (max-width: 767.98px) {
+    .dk-rmt__card { padding: 16px; }
+    .dk-rmt__card--hero { padding: 22px 18px; }
+    .dk-rmt__hero-title { font-size: 22px; }
+    .dk-rmt__row-receive-amount { font-size: 26px; }
+    .dk-rmt__amount-preview-value { font-size: 24px; }
+    .dk-rmt__input--lg { height: 48px; font-size: 22px; }
+    .dk-rmt__lock { flex-wrap: wrap; }
+    .dk-rmt__stepper { gap: 4px; }
+    .dk-rmt__step { min-width: 0; }
+    .dk-rmt__step-circle { width: 32px; height: 32px; font-size: 12px; }
+    .dk-rmt__step-label { font-size: 10.5px; }
+    .dk-rmt__history-row { padding: 12px; gap: 10px; }
+    .dk-rmt__history-meta { gap: 2px; }
+}

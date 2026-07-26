@@ -1,0 +1,168 @@
+/* ==========================================================================
+   RTL overrides — Frontend (Bootstrap 5 + Digikash theme + user dashboard)
+   Loaded LAST and only when the active language is right-to-left, via the
+   <x-rtl-styles area="frontend" /> component. The shipped Bootstrap build is
+   LTR, so direction-aware utilities are flipped explicitly under [dir="rtl"].
+   ========================================================================== */
+
+[dir="rtl"] body {
+    direction: rtl;
+    text-align: right;
+}
+
+/* ----- Text alignment utilities ----- */
+[dir="rtl"] .text-start { text-align: right !important; }
+[dir="rtl"] .text-end { text-align: left !important; }
+
+@media (min-width: 768px) {
+    [dir="rtl"] .text-md-start { text-align: right !important; }
+    [dir="rtl"] .text-md-end { text-align: left !important; }
+}
+
+@media (min-width: 992px) {
+    [dir="rtl"] .text-lg-start { text-align: right !important; }
+    [dir="rtl"] .text-lg-end { text-align: left !important; }
+}
+
+/* ----- Float utilities ----- */
+[dir="rtl"] .float-start { float: right !important; }
+[dir="rtl"] .float-end { float: left !important; }
+
+/* ----- Auto margins ----- */
+[dir="rtl"] .ms-auto { margin-right: auto !important; margin-left: 0 !important; }
+[dir="rtl"] .me-auto { margin-left: auto !important; margin-right: 0 !important; }
+
+/* ----- Margin start/end (0–5) ----- */
+[dir="rtl"] .ms-1 { margin-right: 0.25rem !important; margin-left: 0 !important; }
+[dir="rtl"] .ms-2 { margin-right: 0.5rem !important; margin-left: 0 !important; }
+[dir="rtl"] .ms-3 { margin-right: 1rem !important; margin-left: 0 !important; }
+[dir="rtl"] .ms-4 { margin-right: 1.5rem !important; margin-left: 0 !important; }
+[dir="rtl"] .ms-5 { margin-right: 3rem !important; margin-left: 0 !important; }
+
+[dir="rtl"] .me-1 { margin-left: 0.25rem !important; margin-right: 0 !important; }
+[dir="rtl"] .me-2 { margin-left: 0.5rem !important; margin-right: 0 !important; }
+[dir="rtl"] .me-3 { margin-left: 1rem !important; margin-right: 0 !important; }
+[dir="rtl"] .me-4 { margin-left: 1.5rem !important; margin-right: 0 !important; }
+[dir="rtl"] .me-5 { margin-left: 3rem !important; margin-right: 0 !important; }
+
+/* ----- Padding start/end (0–5) ----- */
+[dir="rtl"] .ps-1 { padding-right: 0.25rem !important; padding-left: 0 !important; }
+[dir="rtl"] .ps-2 { padding-right: 0.5rem !important; padding-left: 0 !important; }
+[dir="rtl"] .ps-3 { padding-right: 1rem !important; padding-left: 0 !important; }
+[dir="rtl"] .ps-4 { padding-right: 1.5rem !important; padding-left: 0 !important; }
+[dir="rtl"] .ps-5 { padding-right: 3rem !important; padding-left: 0 !important; }
+
+[dir="rtl"] .pe-1 { padding-left: 0.25rem !important; padding-right: 0 !important; }
+[dir="rtl"] .pe-2 { padding-left: 0.5rem !important; padding-right: 0 !important; }
+[dir="rtl"] .pe-3 { padding-left: 1rem !important; padding-right: 0 !important; }
+[dir="rtl"] .pe-4 { padding-left: 1.5rem !important; padding-right: 0 !important; }
+[dir="rtl"] .pe-5 { padding-left: 3rem !important; padding-right: 0 !important; }
+
+/* ----- Borders start/end ----- */
+[dir="rtl"] .border-start { border-right: 1px solid var(--bs-border-color, #dee2e6) !important; border-left: 0 !important; }
+[dir="rtl"] .border-end { border-left: 1px solid var(--bs-border-color, #dee2e6) !important; border-right: 0 !important; }
+
+/* ----- Dropdowns ----- */
+[dir="rtl"] .dropdown-menu { text-align: right; }
+[dir="rtl"] .dropdown-menu-end { right: auto; left: 0; }
+[dir="rtl"] .dropdown-menu-start { left: auto; right: 0; }
+
+/* ----- Lists ----- */
+[dir="rtl"] ul,
+[dir="rtl"] ol { padding-right: 0; }
+
+/* ----- Form switches / checks ----- */
+[dir="rtl"] .form-switch {
+    padding-right: 2.5em;
+    padding-left: 0;
+}
+
+[dir="rtl"] .form-switch .form-check-input {
+    margin-right: -2.5em;
+    margin-left: 0;
+    background-position: right center;
+}
+
+[dir="rtl"] .form-check {
+    padding-right: 1.5em;
+    padding-left: 0;
+}
+
+[dir="rtl"] .form-check .form-check-input {
+    float: right;
+    margin-right: -1.5em;
+    margin-left: 0;
+}
+
+/* ----- Input groups ----- */
+[dir="rtl"] .input-group > :not(:first-child):not(.dropdown-menu):not(.valid-tooltip):not(.valid-feedback):not(.invalid-tooltip):not(.invalid-feedback) {
+    margin-right: -1px;
+    margin-left: 0;
+}
+
+/* ----- Digikash theme: header navigation ----- */
+[dir="rtl"] .header-area .main-menu ul li { margin-right: 0; margin-left: 30px; }
+[dir="rtl"] .header-area .main-menu ul li:last-child { margin-left: 0; }
+[dir="rtl"] .header-area .main-menu ul li .submenu { left: auto; right: 0; text-align: right; }
+
+/* ----- Digikash theme: buttons with leading/trailing icons ----- */
+[dir="rtl"] .theme-btn i { margin-right: 0; margin-left: 8px; }
+[dir="rtl"] .theme-btn i.right-icon { margin-left: 0; margin-right: 8px; }
+
+/* ----- nice-select (custom dropdowns) ----- */
+[dir="rtl"] .nice-select { text-align: right !important; padding-right: 18px; padding-left: 30px; }
+[dir="rtl"] .nice-select::after { left: 12px; right: auto; }
+[dir="rtl"] .nice-select .list { left: auto; right: 0; }
+
+/* ----- Native selects: move the caret (and its padding) to the left ----- */
+[dir="rtl"] .form-select {
+    background-position: left 0.75rem center;
+    padding-right: 0.75rem;
+    padding-left: 2.25rem;
+    text-align: right;
+}
+
+/* ----- User dashboard header: open custom dropdowns toward the viewport -----
+   Desktop only: on <=991px these dropdowns are already centered (left:50% +
+   translateX), which is direction-agnostic, so leave that untouched. */
+@media (min-width: 992px) {
+    [dir="rtl"] .premium-header .ph-quick-wrap .quick-function-dropdown,
+    [dir="rtl"] .premium-header .ph-profile__menu {
+        right: auto;
+        left: 0;
+    }
+}
+
+/* ----- Lists / checkmarks / feature rows ----- */
+[dir="rtl"] .list-icon i,
+[dir="rtl"] .check-list li i { margin-right: 0; margin-left: 10px; }
+
+/* ----- User dashboard shell ----- */
+[dir="rtl"] .dashboard-sidebar { right: 0; left: auto; }
+[dir="rtl"] .dashboard-sidebar .sidebar-menu a i { margin-right: 0; margin-left: 12px; }
+[dir="rtl"] .dashboard-content { margin-right: var(--dashboard-sidebar-width, 0); margin-left: 0; }
+[dir="rtl"] .dashboard-card .card-icon { margin-right: 0; margin-left: 16px; }
+
+/* ----- Tables ----- */
+[dir="rtl"] .table > :not(caption) > * > * { text-align: right; }
+[dir="rtl"] .table .text-end { text-align: left !important; }
+
+/* ----- Breadcrumbs ----- */
+[dir="rtl"] .breadcrumb-item + .breadcrumb-item { padding-right: 0.5rem; padding-left: 0; }
+[dir="rtl"] .breadcrumb-item + .breadcrumb-item::before { padding-right: 0; padding-left: 0.5rem; float: right; }
+
+/* ----- Mobile offcanvas drawer ----- */
+[dir="rtl"] .offcanvas__info {
+    right: auto;
+    left: 0;
+    border-left: 0;
+    border-right: 2px solid var(--theme);
+    transform: translateX(calc(-100% - 80px));
+}
+[dir="rtl"] .offcanvas__info.info-open {
+    transform: translateX(0);
+}
+[dir="rtl"] .offcanvas__wrapper .offcanvas__content .offcanvas__contact ul li .offcanvas__contact-icon {
+    margin-right: 0;
+    margin-left: 20px;
+}

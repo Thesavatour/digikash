@@ -1,0 +1,806 @@
+/*
+ * Merchant review modal — admin panel
+ *
+ * Premium redesign of the merchant approval / review surface. Built on
+ * the CoreUI v5 token system (--color-*, --color-*-rgb, --radius-*,
+ * --shadow-*) so the modal inherits the rest of the admin theme and
+ * stays consistent in light AND dark.
+ *
+ * Design principles applied here (senior UI/UX hat):
+ *   1. Hierarchy through type + tone, not boxes-inside-boxes.
+ *   2. The hero header reads as a brand surface, not a Bootstrap alert.
+ *   3. Meta items are a clean info grid (icon + label + value rows),
+ *      replacing the previous wall of look-alike Bootstrap badges.
+ *   4. The status callout is tinted-soft (background = tint @ 12%),
+ *      never a saturated Bootstrap alert.
+ *   5. The Approve / Reject buttons are visually weighted differently:
+ *      approve = filled solid (primary action), reject = outlined
+ *      tonal (destructive but secondary by default). Same hierarchy
+ *      Stripe / Linear / Vercel use on irreversible-action dialogs.
+ *   6. The fee input is a single focal element with a prominent unit
+ *      affix, not a generic Bootstrap input-group.
+ *
+ * Scope: only `.mr-modal*` selectors. The original modal id and form
+ * actions are unchanged; this stylesheet just dresses them up.
+ */
+
+.mr-modal .modal-dialog {
+    max-width: 580px;
+}
+
+.mr-modal .modal-content {
+    overflow: hidden;
+    border: 1px solid rgba(var(--color-text-rgb), 0.08);
+    border-radius: 18px;
+    background: var(--color-card, #ffffff);
+    box-shadow:
+        0 24px 60px -28px rgba(var(--color-text-rgb), 0.3),
+        0 2px 4px rgba(var(--color-text-rgb), 0.04);
+}
+
+.mr-modal__content {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    /* Belt-and-suspenders: any descendant trying to extend past the
+       modal's rounded boundary gets clipped, never spills into the
+       backdrop or forces the body to scroll sideways. */
+    overflow: hidden;
+}
+
+/* ============ Header ============ */
+.mr-modal__header {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 18px;
+    border: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background:
+        radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.16), transparent 38%),
+        linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 60%, var(--color-primary-deep) 100%);
+    color: #ffffff;
+}
+
+.mr-modal__brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mr-modal__logo {
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.mr-modal__brand-text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.mr-modal__title {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mr-modal__subtitle {
+    margin: 2px 0 0;
+    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.78rem;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mr-modal__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+}
+
+.mr-modal__status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.18);
+}
+
+.mr-modal__status.is-pending  { background: rgba(245, 158, 11, 0.22); border-color: rgba(245, 158, 11, 0.5); }
+.mr-modal__status.is-approved { background: rgba(34, 197, 94, 0.22);  border-color: rgba(34, 197, 94, 0.5); }
+.mr-modal__status.is-disabled { background: rgba(245, 158, 11, 0.22); border-color: rgba(245, 158, 11, 0.5); }
+.mr-modal__status.is-rejected { background: rgba(239, 68, 68, 0.22);  border-color: rgba(239, 68, 68, 0.5); }
+
+.mr-modal__close {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+    /* `inline-flex + center / center` centers the FontAwesome glyph
+       perfectly. `display: grid + place-items: center` was leaking
+       the glyph's baseline offset, which made the X look slightly
+       low-right inside the circle. */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.82rem;
+    line-height: 1;
+    opacity: 1;
+}
+
+.mr-modal__close i {
+    display: block;
+    line-height: 1;
+    /* FontAwesome glyphs ship with an intrinsic ~0.05em descender;
+       nudge up by half a pixel so the X visually centers. */
+    transform: translateY(-0.5px);
+}
+
+.mr-modal__close:hover,
+.mr-modal__close:focus {
+    background: rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    transform: scale(1.04);
+}
+
+.mr-modal__close:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.6);
+    outline-offset: 2px;
+}
+
+/* ============ Body ============ */
+.mr-modal__body {
+    max-height: 72vh;
+    padding: 18px;
+    overflow-y: auto;
+    /*
+     * Hard-kill horizontal scroll. Without this, a long Site URL,
+     * a wide email, or a long description token can push the body
+     * sideways on real-mobile widths even though every child has
+     * its own truncation rules.
+     */
+    overflow-x: hidden;
+    background: var(--color-card, #ffffff);
+    /* Slim scrollbar — Firefox + modern Chromium */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(var(--color-text-rgb), 0.18) transparent;
+}
+
+/* Slim scrollbar — Webkit (Chrome / Safari / Edge) */
+.mr-modal__body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.mr-modal__body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.mr-modal__body::-webkit-scrollbar-thumb {
+    background: rgba(var(--color-text-rgb), 0.18);
+    border-radius: 999px;
+}
+
+.mr-modal__body::-webkit-scrollbar-thumb:hover {
+    background: rgba(var(--color-text-rgb), 0.28);
+}
+
+/* ----- Status callout — tinted soft, no Bootstrap alert ----- */
+.mr-modal__callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.mr-modal__callout-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: grid;
+    place-items: center;
+    font-size: 0.72rem;
+}
+
+.mr-modal__callout--info {
+    background: rgba(var(--color-info-rgb), 0.08);
+    border-color: rgba(var(--color-info-rgb), 0.18);
+    color: var(--color-info-deep, var(--color-info));
+}
+
+.mr-modal__callout--info .mr-modal__callout-icon {
+    background: rgba(var(--color-info-rgb), 0.18);
+    color: var(--color-info);
+}
+
+.mr-modal__callout--success {
+    background: rgba(var(--color-success-rgb), 0.08);
+    border-color: rgba(var(--color-success-rgb), 0.2);
+    color: var(--color-success-deep, var(--color-success));
+}
+
+.mr-modal__callout--success .mr-modal__callout-icon {
+    background: rgba(var(--color-success-rgb), 0.18);
+    color: var(--color-success);
+}
+
+.mr-modal__callout--warning {
+    background: rgba(var(--color-warning-rgb), 0.1);
+    border-color: rgba(var(--color-warning-rgb), 0.24);
+    color: var(--color-warning-deep, var(--color-warning));
+}
+
+.mr-modal__callout--warning .mr-modal__callout-icon {
+    background: rgba(var(--color-warning-rgb), 0.2);
+    color: var(--color-warning-strong, var(--color-warning));
+}
+
+.mr-modal__callout--danger {
+    background: rgba(var(--color-danger-rgb), 0.08);
+    border-color: rgba(var(--color-danger-rgb), 0.22);
+    color: var(--color-danger-deep, var(--color-danger));
+}
+
+.mr-modal__callout--danger .mr-modal__callout-icon {
+    background: rgba(var(--color-danger-rgb), 0.18);
+    color: var(--color-danger);
+}
+
+/* ----- Meta grid (replaces the chip wall) ----- */
+.mr-modal__meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+    padding: 12px;
+    border: 1px solid rgba(var(--color-text-rgb), 0.08);
+    border-radius: 12px;
+    background: rgba(var(--color-text-rgb), 0.025);
+}
+
+.mr-modal__meta-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.mr-modal__meta-item--full {
+    grid-column: 1 / -1;
+}
+
+.mr-modal__meta-icon {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+    font-size: 0.78rem;
+}
+
+.mr-modal__meta-body {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.mr-modal__meta-label {
+    display: block;
+    color: var(--color-text-muted, #6b7280);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    line-height: 1;
+    margin-bottom: 3px;
+}
+
+.mr-modal__meta-value {
+    display: block;
+    color: var(--color-text, #0f172a);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.mr-modal__meta-value a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.mr-modal__meta-value a:hover,
+.mr-modal__meta-value a:focus {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+.mr-modal__meta-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    line-height: 1.4;
+}
+
+.mr-modal__meta-pill--sandbox {
+    background: rgba(var(--color-warning-rgb), 0.16);
+    color: var(--color-warning-deep);
+}
+
+.mr-modal__meta-pill--production {
+    background: rgba(var(--color-success-rgb), 0.16);
+    color: var(--color-success-deep);
+}
+
+/* ----- Section card ----- */
+.mr-modal__section {
+    padding: 14px 16px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(var(--color-text-rgb), 0.08);
+    border-radius: 14px;
+    background: var(--color-card, #ffffff);
+    box-shadow: 0 1px 2px rgba(var(--color-text-rgb), 0.03);
+}
+
+.mr-modal__section-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.mr-modal__section-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+    font-size: 0.82rem;
+}
+
+.mr-modal__section-title {
+    margin: 0;
+    color: var(--color-text, #0f172a);
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+}
+
+/* ----- Description quote block ----- */
+.mr-modal__quote {
+    position: relative;
+    /* `min-width: 0` lets the quote shrink inside any flex/grid
+       ancestor; `overflow-wrap: anywhere` + `word-break: break-word`
+       ensures long unbreakable strings (e.g., URLs, tokens, demo
+       merchant names) wrap instead of escaping the modal. */
+    min-width: 0;
+    max-width: 100%;
+    padding: 12px 14px 12px 38px;
+    border-radius: 10px;
+    background: rgba(var(--color-primary-rgb), 0.05);
+    color: var(--color-text, #0f172a);
+    font-size: 0.86rem;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.mr-modal__quote::before {
+    content: "\201C";
+    position: absolute;
+    top: 4px;
+    left: 12px;
+    color: rgba(var(--color-primary-rgb), 0.4);
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.mr-modal__quote-label {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}
+
+.mr-modal__quote-text {
+    /*
+     * Hard-wrap container for the description body. Putting these on
+     * a dedicated block (instead of relying on the parent `.mr-modal__quote`
+     * to cascade them) makes the wrap robust against any future child
+     * markup, browser cache quirks, and inherited styles.
+     */
+    display: block;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    word-wrap: break-word;
+    white-space: normal;
+    hyphens: auto;
+    color: var(--color-text, #0f172a);
+    font-size: 0.86rem;
+    line-height: 1.5;
+}
+
+.mr-modal__quote-empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+.mr-modal__quote-toggle {
+    margin-left: 4px;
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.mr-modal__quote-toggle:hover,
+.mr-modal__quote-toggle:focus {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+/* ----- Request meta row (below quote) ----- */
+.mr-modal__request-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(var(--color-text-rgb), 0.1);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+}
+
+.mr-modal__request-meta i {
+    color: var(--color-primary);
+}
+
+.mr-modal__request-meta-spacer {
+    flex: 1 1 auto;
+}
+
+.mr-modal__request-meta-ago {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(var(--color-text-rgb), 0.06);
+    color: var(--color-text);
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+/* ----- Fee field ----- */
+.mr-modal__fee-label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--color-text, #0f172a);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.mr-modal__fee-field {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+    border: 1px solid rgba(var(--color-text-rgb), 0.16);
+    border-radius: 12px;
+    background: var(--color-surface-alt, #f8fafc);
+    overflow: hidden;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.mr-modal__fee-field:focus-within {
+    border-color: var(--color-primary);
+    background: var(--color-card, #ffffff);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.14);
+}
+
+.mr-modal__fee-input {
+    flex: 1 1 auto;
+    padding: 12px 14px;
+    border: 0;
+    background: transparent;
+    color: var(--color-text);
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-feature-settings: "tnum";
+    outline: none;
+    min-width: 0;
+}
+
+.mr-modal__fee-input::placeholder {
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+.mr-modal__fee-suffix {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-left: 1px solid rgba(var(--color-text-rgb), 0.08);
+    background: rgba(var(--color-primary-rgb), 0.06);
+    color: var(--color-primary);
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.mr-modal__fee-hint {
+    margin-top: 8px;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.mr-modal__fee-error {
+    margin-top: 6px;
+    color: var(--color-danger);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+/* ----- Operational note ----- */
+.mr-modal__note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(var(--color-text-rgb), 0.04);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.mr-modal__note i {
+    color: var(--color-info);
+    flex-shrink: 0;
+}
+
+/* ============ Footer ============ */
+.mr-modal__footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 18px;
+    border: 0;
+    border-top: 1px solid rgba(var(--color-text-rgb), 0.08);
+    background: rgba(var(--color-text-rgb), 0.03);
+}
+
+.mr-modal__footer-empty {
+    width: 100%;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    padding: 6px 0;
+}
+
+/*
+ * Action buttons — matches the admin's existing `.pm-action-btn`
+ * design language (used on Page Manager, the closest existing
+ * "premium B2B admin table action" surface).
+ *
+ * Restrained, flat, modern. No heavy gradients, no glow shadows —
+ * just a solid token-coloured background, a tight rounded radius,
+ * a tiny 1px translateY lift on hover, and a subtle box-shadow.
+ * Same restraint Stripe / Linear / Vercel use on their dialog
+ * primary-action buttons.
+ */
+.mr-modal__btn {
+    flex: 1 1 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: var(--font-bold, 700);
+    line-height: 1;
+    letter-spacing: -0.005em;
+    cursor: pointer;
+    transition:
+        transform 0.18s ease,
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        box-shadow 0.18s ease;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.mr-modal__btn i {
+    font-size: 0.85rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.mr-modal__btn:hover {
+    transform: translateY(-1px);
+}
+
+.mr-modal__btn:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 3px;
+}
+
+/* ----- Approve — flat success solid, the "primary positive" CTA ----- */
+.mr-modal__btn--approve {
+    background: var(--color-success-strong, var(--color-success));
+    color: var(--color-white, #ffffff);
+    box-shadow: 0 4px 10px rgba(var(--color-success-rgb), 0.18);
+}
+
+.mr-modal__btn--approve:hover,
+.mr-modal__btn--approve:focus {
+    background: var(--color-success-deep, #047857);
+    color: var(--color-white, #ffffff);
+    box-shadow: 0 6px 14px rgba(var(--color-success-rgb), 0.26);
+}
+
+/* ----- Primary — flat brand solid, the "save / update" CTA ----- */
+.mr-modal__btn--primary {
+    background: var(--color-primary);
+    color: var(--color-white, #ffffff);
+    box-shadow: 0 4px 10px rgba(var(--color-primary-rgb), 0.18);
+}
+
+.mr-modal__btn--primary:hover,
+.mr-modal__btn--primary:focus {
+    background: var(--color-primary-hover);
+    color: var(--color-white, #ffffff);
+    box-shadow: 0 6px 14px rgba(var(--color-primary-rgb), 0.26);
+}
+
+/* ----- Reject / Ghost-danger — tinted danger background, deep text ----- */
+.mr-modal__btn--reject,
+.mr-modal__btn--ghost-danger {
+    background: rgba(var(--color-danger-rgb), 0.1);
+    color: var(--color-danger-deep, var(--color-danger));
+    border-color: rgba(var(--color-danger-rgb), 0.18);
+}
+
+.mr-modal__btn--reject:hover,
+.mr-modal__btn--reject:focus,
+.mr-modal__btn--ghost-danger:hover,
+.mr-modal__btn--ghost-danger:focus {
+    background: rgba(var(--color-danger-rgb), 0.16);
+    color: var(--color-danger-deep, var(--color-danger));
+    border-color: rgba(var(--color-danger-rgb), 0.32);
+    box-shadow: 0 4px 10px rgba(var(--color-danger-rgb), 0.12);
+}
+
+/* ----- Ghost primary — tinted brand background ----- */
+.mr-modal__btn--ghost-primary {
+    background: rgba(var(--color-primary-rgb), 0.1);
+    color: var(--color-primary);
+    border-color: rgba(var(--color-primary-rgb), 0.18);
+}
+
+.mr-modal__btn--ghost-primary:hover,
+.mr-modal__btn--ghost-primary:focus {
+    background: rgba(var(--color-primary-rgb), 0.16);
+    color: var(--color-primary-hover);
+    border-color: rgba(var(--color-primary-rgb), 0.32);
+    box-shadow: 0 4px 10px rgba(var(--color-primary-rgb), 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mr-modal__btn,
+    .mr-modal__btn:hover,
+    .mr-modal__btn:focus,
+    .mr-modal__close,
+    .mr-modal__close:hover,
+    .mr-modal__close:focus {
+        transition: none;
+        transform: none;
+    }
+}
+
+/* ============ Responsive ============ */
+@media (max-width: 575.98px) {
+    .mr-modal__header {
+        padding: 14px;
+        flex-wrap: wrap;
+    }
+
+    .mr-modal__status {
+        order: 3;
+        margin-left: auto;
+    }
+
+    .mr-modal__body {
+        padding: 14px;
+        max-height: 76vh;
+    }
+
+    .mr-modal__meta {
+        grid-template-columns: 1fr;
+        padding: 10px;
+    }
+
+    .mr-modal__footer {
+        padding: 12px 14px;
+        flex-direction: column;
+    }
+
+    .mr-modal__btn {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mr-modal__close,
+    .mr-modal__btn,
+    .mr-modal__fee-field {
+        transition: none;
+    }
+
+    .mr-modal__close:hover,
+    .mr-modal__btn:hover {
+        transform: none;
+    }
+}

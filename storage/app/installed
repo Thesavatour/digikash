@@ -1,0 +1,14 @@
+{
+    "installed_at": "2026-07-23T21:08:32+00:00",
+    "app_name": "DigiKash",
+    "app_url": "http:\/\/192.168.0.130:8010",
+    "admin_email": "admin@digikash.local",
+    "db_connection": "mysql",
+    "envato_license": {
+        "item_id": null,
+        "buyer_username": null,
+        "domain": null,
+        "status": null,
+        "verified_at": "2026-07-23T21:08:32+00:00"
+    }
+}

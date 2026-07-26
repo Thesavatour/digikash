@@ -1,0 +1,159 @@
+.upm__content {
+    border: 0;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+    /* Softer, flatter elevation — the previous 0 20px 60px / .25 shadow
+       read as a heavy floating slab. A tighter, lower-opacity shadow keeps
+       the modal grounded and stable. */
+    box-shadow: 0 10px 30px rgba(var(--front-rgb-15-23-42), .12);
+}
+
+.upm__close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 5;
+    background-color: rgba(var(--front-color-white-rgb), .9);
+    border-radius: 999px;
+    padding: 9px;
+    opacity: 1;
+}
+
+.upm__hero {
+    background: linear-gradient(135deg, var(--front-palette-0b1437) 0%, var(--front-palette-2074e8) 58%, var(--front-palette-1fbe6b) 100%);
+    color: var(--front-color-white);
+    padding: 32px 28px 26px;
+    text-align: center;
+}
+
+.upm__icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    border-radius: 18px;
+    background: rgba(var(--front-color-white-rgb), .18);
+    border: 1px solid rgba(var(--front-color-white-rgb), .25);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--front-font-size-px-26);
+    /* backdrop-filter removed: the blur was a GPU effect that caused
+       repaint flicker on scroll/open and isn't needed over a solid
+       gradient hero. */
+}
+
+.upm__title {
+    margin: 0 0 6px;
+    font-size: var(--front-font-size-px-20);
+    font-weight: var(--front-font-bold);
+    color: var(--front-color-white);
+}
+
+.upm__copy {
+    margin: 0;
+    font-size: var(--front-font-sm);
+    line-height: 1.55;
+    color: rgba(var(--front-color-white-rgb), .92);
+    max-width: 360px;
+    margin-inline: auto;
+}
+
+.upm__body {
+    padding: 24px 28px 8px;
+}
+
+.upm__benefits-title {
+    font-size: var(--front-font-size-px-11);
+    font-weight: var(--front-font-bold);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--front-color-primary);
+    margin-bottom: 10px;
+}
+
+.upm__benefits {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.upm__benefits li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: var(--front-font-size-px-135);
+    line-height: 1.45;
+    color: var(--front-palette-1e293b);
+}
+
+.upm__benefits li i {
+    color: var(--front-color-success);
+    font-size: var(--front-font-sm);
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.upm__footer {
+    display: flex;
+    gap: 10px;
+    padding: 20px 28px 26px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+}
+
+.upm__btn-secondary,
+.upm__btn-primary {
+    /* inline-flex + gap aligns the leading icon with the label cleanly
+       and consistently across both buttons (no reliance on me-* spacing). */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 140px;
+    font-weight: var(--front-font-semibold);
+}
+
+.upm__btn-secondary i,
+.upm__btn-primary i {
+    font-size: var(--front-font-sm);
+    line-height: 1;
+}
+
+.upm__btn-primary {
+    background: linear-gradient(135deg, var(--front-palette-0b1437) 0%, var(--front-palette-2074e8) 100%);
+    border: 0;
+    color: var(--front-color-white);
+    /* Stable, non-animated hover — swap to a concrete darker gradient
+       instead of a brightness GPU effect (which forced a compositing
+       layer and shifted sub-pixel rendering on hover). */
+    transition: background 0.15s ease;
+}
+
+.upm__btn-primary:hover,
+.upm__btn-primary:focus {
+    color: var(--front-color-white);
+    background: linear-gradient(135deg, var(--front-palette-0b1437) 0%, var(--front-palette-1a5fc4, #1a5fc4) 100%);
+}
+
+@media (max-width: 575.98px) {
+    .upm__hero {
+        padding: 26px 20px 22px;
+    }
+
+    .upm__body {
+        padding: 20px 20px 4px;
+    }
+
+    .upm__footer {
+        padding: 16px 20px 22px;
+    }
+
+    .upm__btn-secondary,
+    .upm__btn-primary {
+        width: 100%;
+    }
+}
