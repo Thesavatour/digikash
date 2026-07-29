@@ -428,7 +428,10 @@ class PwaController extends Controller
         $path     = $path !== '' ? $path : $fallback;
         $path     = $this->browserIconPath($path);
 
-        if ($path !== '' && $this->isUsableIcon($path, self::ICON_DIMENSIONS[$key] ?? null)) {
+        // Off-size uploads are rescaled by ensureDisplayableIcon() rather than
+        // discarded. Requiring exact pixel dimensions here meant an admin
+        // upload of any other size silently served the bundled default.
+        if ($path !== '' && $this->isReadableIcon($path)) {
             return $this->ensureDisplayableIcon($key, $path);
         }
 
@@ -440,9 +443,10 @@ class PwaController extends Controller
     }
 
     /**
-     * Ensure the icon has a solid background. White-on-transparent uploads
-     * are invisible on light home-screen tiles, so iOS/Android show the
-     * first letter of the app name instead.
+     * Normalise the icon to the size the manifest promises, and give it a
+     * solid background when needed. White-on-transparent uploads are
+     * invisible on light home-screen tiles, so iOS/Android show the first
+     * letter of the app name instead.
      */
     private function ensureDisplayableIcon(string $key, string $path): string
     {
@@ -455,24 +459,38 @@ class PwaController extends Controller
             return $path;
         }
 
-        if (! $this->iconNeedsBackgroundFill($absolute)) {
-            return $path;
-        }
-
         $dimensions = self::ICON_DIMENSIONS[$key] ?? [192, 192];
         $width      = (int) $dimensions[0];
         $height     = (int) $dimensions[1];
-        $bgHex      = $this->backgroundColor();
-        $safeScale  = $key === 'maskable_icon' ? 0.72 : 0.86;
+
+        $isMaskable = $key === 'maskable_icon';
+        $sparseArt  = $this->iconNeedsBackgroundFill($absolute);
+
+        // iOS paints transparent Home Screen pixels black and Android crops
+        // maskable tiles to a circle, so both must end up opaque.
+        $mustBeOpaque = $isMaskable || $key === 'apple_touch_icon';
+
+        // Sparse or near-white art is inset on a solid tile so it stays
+        // visible; anything else fills the canvas edge to edge.
+        $inset       = $isMaskable || $sparseArt;
+        $needsFill   = $inset || ($mustBeOpaque && $this->iconHasTransparency($absolute));
+        $needsResize = ! $this->hasExactDimensions($absolute, $width, $height);
+
+        if (! $needsFill && ! $needsResize) {
+            return $path;
+        }
+
+        $bgHex     = $needsFill ? $this->backgroundColor() : null;
+        $safeScale = $inset ? ($isMaskable ? 0.72 : 0.86) : 1.0;
         $contentHash = @sha1_file($absolute) ?: (string) filemtime($absolute);
-        $fingerprint = substr(sha1($absolute.'|'.$contentHash.'|'.$bgHex.'|'.$width.'|'.$safeScale), 0, 16);
-        $relative   = 'pwa/prepared/'.$key.'-'.$fingerprint.'.png';
+        $fingerprint = substr(sha1($absolute.'|'.$contentHash.'|'.($bgHex ?? 'alpha').'|'.$width.'|'.$safeScale), 0, 16);
+        $relative    = 'pwa/prepared/'.$key.'-'.$fingerprint.'.png';
 
         if (Storage::disk('public')->exists($relative)) {
             return 'storage/'.$relative;
         }
 
-        $prepared = $this->compositeIconOnBackground($absolute, $width, $height, $bgHex, $safeScale);
+        $prepared = $this->rasterizeIcon($absolute, $width, $height, $bgHex, $safeScale);
         if ($prepared === null) {
             return $path;
         }
@@ -542,11 +560,45 @@ class PwaController extends Controller
         return $transparentRatio >= 0.45 || ($transparentRatio >= 0.20 && $lightAmongOpaque >= 0.85 && $opaqueDark < max(8, $samples * 0.02));
     }
 
-    private function compositeIconOnBackground(
+    private function iconHasTransparency(string $absolutePath): bool
+    {
+        $image = @imagecreatefrompng($absolutePath);
+        if ($image === false) {
+            $image = @imagecreatefromstring((string) file_get_contents($absolutePath));
+        }
+        if ($image === false) {
+            return false;
+        }
+
+        $width  = imagesx($image);
+        $height = imagesy($image);
+        $step   = max(1, (int) floor(min($width, $height) / 48));
+
+        for ($y = 0; $y < $height; $y += $step) {
+            for ($x = 0; $x < $width; $x += $step) {
+                // GD alpha: 0 opaque … 127 fully transparent.
+                if ((imagecolorsforindex($image, imagecolorat($image, $x, $y))['alpha'] ?? 0) >= 8) {
+                    imagedestroy($image);
+
+                    return true;
+                }
+            }
+        }
+
+        imagedestroy($image);
+
+        return false;
+    }
+
+    /**
+     * Redraw the source image at exactly $width x $height. A null
+     * $backgroundHex keeps the canvas transparent.
+     */
+    private function rasterizeIcon(
         string $sourcePath,
         int $width,
         int $height,
-        string $backgroundHex,
+        ?string $backgroundHex,
         float $safeScale
     ): ?string {
         $source = @imagecreatefrompng($sourcePath);
@@ -564,12 +616,19 @@ class PwaController extends Controller
             return null;
         }
 
-        imagealphablending($canvas, true);
-        imagesavealpha($canvas, false);
+        if ($backgroundHex === null) {
+            // Blending stays off so imagecopyresampled() copies alpha verbatim
+            // instead of compositing the artwork onto opaque black.
+            imagealphablending($canvas, false);
+            imagesavealpha($canvas, true);
+            imagefilledrectangle($canvas, 0, 0, $width, $height, imagecolorallocatealpha($canvas, 0, 0, 0, 127));
+        } else {
+            imagealphablending($canvas, true);
+            imagesavealpha($canvas, false);
 
-        [$r, $g, $b] = $this->hexToRgb($backgroundHex);
-        $bg = imagecolorallocate($canvas, $r, $g, $b);
-        imagefilledrectangle($canvas, 0, 0, $width, $height, $bg);
+            [$r, $g, $b] = $this->hexToRgb($backgroundHex);
+            imagefilledrectangle($canvas, 0, 0, $width, $height, imagecolorallocate($canvas, $r, $g, $b));
+        }
 
         $srcW = imagesx($source);
         $srcH = imagesy($source);
@@ -645,29 +704,26 @@ class PwaController extends Controller
         return Storage::disk('public')->exists($storagePath) ? 'storage/'.$storagePath : $path;
     }
 
-    /**
-     * @param array{0: int, 1: int}|null $dimensions
-     */
-    private function isUsableIcon(string $path, ?array $dimensions): bool
+    private function isReadableIcon(string $path): bool
     {
         if (filter_var($path, FILTER_VALIDATE_URL)) {
             return true;
         }
 
         $absolutePath = $this->absoluteIconPath($path);
-        if ($absolutePath === null || ! is_file($absolutePath)) {
-            return false;
-        }
 
-        if ($dimensions === null) {
-            return true;
-        }
+        return $absolutePath !== null
+            && is_file($absolutePath)
+            && is_array(@getimagesize($absolutePath));
+    }
 
+    private function hasExactDimensions(string $absolutePath, int $width, int $height): bool
+    {
         $imageSize = @getimagesize($absolutePath);
 
         return is_array($imageSize)
-            && (int) $imageSize[0] === $dimensions[0]
-            && (int) $imageSize[1] === $dimensions[1];
+            && (int) $imageSize[0] === $width
+            && (int) $imageSize[1] === $height;
     }
 
     private function absoluteIconPath(string $path): ?string
