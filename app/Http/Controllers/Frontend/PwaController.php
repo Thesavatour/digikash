@@ -371,7 +371,12 @@ class PwaController extends Controller
         }
 
         $hash     = substr((string) sha1_file($absolute), 0, 16);
-        $relative = 'pwa/touch/apple-'.$hash.'.png';
+        // Fold the SW/cache tag into the public filename so a republish always
+        // yields a new href even when the PNG bytes are unchanged — iOS will
+        // not re-fetch an apple-touch-icon it already has for a given path.
+        $cacheTag = preg_replace('/[^a-zA-Z0-9]/', '', $this->cacheVersion()) ?: '1';
+        $cacheTag = substr($cacheTag, -8);
+        $relative = 'pwa/touch/apple-'.$hash.'-'.$cacheTag.'.png';
         $destDir  = public_path('pwa/touch');
         $dest     = public_path($relative);
 

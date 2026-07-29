@@ -3,7 +3,9 @@
     // Content-hashed path (not ?v=). iOS Safari ignores query strings on
     // apple-touch-icon and keeps the home-screen glyph until the user
     // deletes + re-adds the app with a new href path.
-    $appleTouchHref = $pwa->appleTouchIconPublicUrl();
+    // Absolute URL: Safari on deep paths like /user/dashboard has been
+    // observed to keep a stale root apple-touch-icon when given a host-relative href.
+    $appleTouchHref = url($pwa->appleTouchIconPublicUrl());
 @endphp
 @if($pwa->isPwaEnabled())
     <meta name="theme-color" content="{{ $pwa->themeColor() }}">

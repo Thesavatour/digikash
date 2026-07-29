@@ -8,8 +8,17 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta name="csrf-token" content="{{ csrf_token() }}">
 	
-	{{-- Page Title --}}
-	<title>{{ setting('site_title') }} | @yield('title', 'Dashboard')</title>
+	{{-- Page Title.
+	     iOS "Add to Home Screen" pre-fills the app name from <title>, not from
+	     apple-mobile-web-app-title. Keep the PWA short/app name alone so the
+	     sheet shows "PayPoint" instead of "PayPoint | Dashboard". --}}
+	@php
+		$pwaHead = app(\App\Http\Controllers\Frontend\PwaController::class);
+		$pwaDocTitle = $pwaHead->isPwaEnabled()
+			? $pwaHead->shortName()
+			: (setting('site_title').' | '.trim($__env->yieldContent('title', 'Dashboard')));
+	@endphp
+	<title>{{ $pwaDocTitle }}</title>
 
 	@if(config('app.demo'))
 		{{-- Demo Mode Disclosure (for automated scanners & reviewers) --}}
